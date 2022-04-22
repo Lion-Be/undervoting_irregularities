@@ -4,6 +4,9 @@
 #' Lion Behrens
 #' ------------------------------------------------------------------------
 
+library(foreign)
+library(stringr)
+
 # load in raw datasets
 primera17 <- read.spss("U:/PhD Electoral Fraud/Data/Ecuador/CNE/2017 Elecciones Generales/primera vuelta.sav", to.data.frame=T)
 cand17 <- read.spss("U:/PhD Electoral Fraud/Data/Ecuador/CNE/2017 Elecciones Generales/candidatos 2017.sav", to.data.frame=T)
