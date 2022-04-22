@@ -4,6 +4,7 @@
 #' Lion Behrens
 #' ------------------------------------------------------------------------#
 
+library(tikzDevice)
 load("U:/PhD Electoral Fraud/Papers/Detecting Unbalanced Fraud Approaches From Undervoting Irregularities/undervoting_irregularities/actas17.Rdata")
 
 #' ------------------------------
@@ -37,31 +38,55 @@ load("U:/PhD Electoral Fraud/Papers/Detecting Unbalanced Fraud Approaches From U
 #' --------------------------- 
 
   # chains sorted by turnout
-  actas17 <- actas17[order(actas17$SUFRAGANTES_consulta),] 
+  actas17 <- actas17[order(actas17$SUFRAGANTES_asam_prov),] 
   actas17$id <- 1:nrow(actas17)
   
-  par(mfrow=c(2,2))
-  plot(actas17$id, actas17$SUFRAGANTES_pres, 
+  par(mfrow=c(4,1))
+  par(mar = c(0, 4.5, 4, 1), xpd=T)
+  plot(actas17$id[actas17$SUFRAGANTES_pres<351], actas17$SUFRAGANTES_pres[actas17$SUFRAGANTES_pres<351], 
        type="l", col="darkgrey", 
-       bty="n", xlab="", ylab="Number of Turned Out Voters", main="Presidential Election")
-  lines(actas17$id, actas17$SUFRAGANTES_consulta, col="green", lwd=2)
+       bty="n", xaxt="n", yaxt="n", xlab="", ylab="", main="")
+  lines(actas17$id[actas17$SUFRAGANTES_asam_prov<351], actas17$SUFRAGANTES_asam_prov[actas17$SUFRAGANTES_asam_prov<351], col="chartreuse3", lwd=2)
+  text(9000, 350, labels="Presidential Election", cex=1.2)
+  segments(-200, 350, 1000, 350, col="darkgrey", lwd=2)
+  text(-3000, 420, labels="2017", cex=1.5, font=2)
   
-  plot(actas17$id, actas17$SUFRAGANTES_asam_nac, 
+  par(mar = c(0, 4.5, 0.5, 1))
+  plot(actas17$id[actas17$SUFRAGANTES_asam_nac<351], actas17$SUFRAGANTES_asam_nac[actas17$SUFRAGANTES_asam_nac<351], 
        type="l", col="darkgrey", 
-       bty="n", xlab="", ylab="", main="National Parliament")
-  lines(actas17$id, actas17$SUFRAGANTES_consulta, col="green", lwd=2)
+       bty="n", xaxt="n", yaxt="n", xlab="", ylab="", main="")
+  lines(actas17$id[actas17$SUFRAGANTES_asam_prov<351], actas17$SUFRAGANTES_asam_prov[actas17$SUFRAGANTES_asam_prov<351], col="chartreuse3", lwd=2)
+  text(8500, 350, labels="National Parliament", cex=1.2)
+  segments(-200, 350, 1000, 350, col="darkgrey", lwd=2)
   
-  plot(actas17$id, actas17$SUFRAGANTES_asam_prov, 
+  plot(actas17$id[actas17$SUFRAGANTES_andino<351], actas17$SUFRAGANTES_andino[actas17$SUFRAGANTES_andino<351], 
        type="l", col="darkgrey", 
-       bty="n", xlab="Polling Station ID", ylab="Number of Turned Out Voters", main="Regional Parlaments")
-  lines(actas17$id, actas17$SUFRAGANTES_consulta, col="green", lwd=2)
+       bty="n", xaxt="n", yaxt="n", xlab="", ylab="", main="")
+  lines(actas17$id[actas17$SUFRAGANTES_asam_prov<351], actas17$SUFRAGANTES_asam_prov[actas17$SUFRAGANTES_asam_prov<351], col="chartreuse3", lwd=2)
+  text(8500, 350, labels="Andean Parliament", cex=1.2)
+  segments(-200, 350, 1000, 350, col="darkgrey", lwd=2)
   
-  plot(actas17$id, actas17$SUFRAGANTES_andino, 
-       type="l", col="darkgrey", 
-       bty="n", xlab="Polling Station ID", ylab="", main="Andean Parliament")
-  lines(actas17$id, actas17$SUFRAGANTES_consulta, col="green", lwd=2)
+  par(mar = c(4.5, 4.5, 1, 1)) 
+  plot(actas17$id[actas17$SUFRAGANTES_consulta<351], actas17$SUFRAGANTES_consulta[actas17$SUFRAGANTES_consulta<351], 
+       type="l", col="darkgrey", ylim=c(0,380), 
+       bty="n", xlab="Polling Station ID", ylab="Absolute Turnout", main="", cex.lab=1.2)
+  lines(actas17$id[actas17$SUFRAGANTES_asam_prov<351], actas17$SUFRAGANTES_asam_prov[actas17$SUFRAGANTES_asam_prov<351], col="chartreuse3", lwd=2)
+  text(9500, 400, labels="National Referendum", cex=1.2)
+  text(9500, 340, labels="Regional Parliaments", cex=1.2)
+  segments(-200, 400, 1000, 400, col="darkgrey", lwd=2)
+  segments(-200, 340, 1000, 340, col="chartreuse", lwd=2)
   
-    ### maybe change the scale to absolute levels?
+  # saved with width=450, height=700
+  
+  #### alternative figure: green line plots vote share winner
+  #### grey lines plot extent of undervoting. but this is already substantially informative
+  
+  
+  
+  
+  
+  
+  
   
   
   # extent of undervoting vs. winner's vote share
@@ -79,13 +104,13 @@ load("U:/PhD Electoral Fraud/Papers/Detecting Unbalanced Fraud Approaches From U
   par(mfrow=c(1,1))
   plot(actas17$under_pres_consulta[actas17$under_pres_consulta>0], 
        actas17$pw_pres[actas17$under_pres_consulta>0], 
-       xlim=c(0,1)
+       xlim=c(0,1), col="darkgrey",  bty="n", pch=20
        )
   lw1 <- loess(pw_pres ~ under_pres_consulta, data=actas17[actas17$under_pres_consulta>0,])
   j <- order(actas17[actas17$under_pres_consulta>0,]$under_pres_consulta)
   lines(actas17[actas17$under_pres_consulta>0,]$under_pres_consulta[j],lw1$fitted[j],col="lightblue")
   
-  
+  #### => plot scatterplots from simulated elections with different degrees of fraud over each other
   
   
   
