@@ -4,7 +4,8 @@
 #' Lion Behrens
 #' ------------------------------------------------------------------------#
 
-library(tikzDevice)
+library(scales) # for alpha function in plotting
+library(VGAM) # for dlaplace
 load("U:/PhD Electoral Fraud/Papers/Detecting Unbalanced Fraud Approaches From Undervoting Irregularities/undervoting_irregularities/actas17.Rdata")
 
 #' ------------------------------
@@ -26,6 +27,13 @@ load("U:/PhD Electoral Fraud/Papers/Detecting Unbalanced Fraud Approaches From U
   # extent of undervoting
   actas17$under_pres_consulta <- abs((actas17$SUFRAGANTES_pres - actas17$SUFRAGANTES_consulta) / actas17$SUFRAGANTES_pres)
   actas17$under_pres_asam_prov <- abs((actas17$SUFRAGANTES_pres - actas17$SUFRAGANTES_asam_prov) / actas17$SUFRAGANTES_pres)
+  actas17$under_nac_prov <- abs((actas17$SUFRAGANTES_asam_nac - actas17$SUFRAGANTES_asam_prov) / actas17$SUFRAGANTES_asam_nac)
+  actas17$under_andino_prov <- abs((actas17$SUFRAGANTES_andino - actas17$SUFRAGANTES_asam_prov) / actas17$SUFRAGANTES_andino)
+  actas17$under_consulta_prov <- abs((actas17$SUFRAGANTES_consulta - actas17$SUFRAGANTES_asam_prov) / actas17$SUFRAGANTES_consulta)
+  
+  
+  
+  
   
   # winner's vote share
   actas17$pw_pres <- actas17$MORENO_pres / actas17$SUFRAGANTES_pres
@@ -37,6 +45,37 @@ load("U:/PhD Electoral Fraud/Papers/Detecting Unbalanced Fraud Approaches From U
 # 2. visualization -----------
 #' --------------------------- 
 
+  # univariate distribution of undervoting irregularities 
+  hist(actas17$SUFRAGANTES_pres[actas17$under_pres_asam_prov!=0] - actas17$SUFRAGANTES_asam_prov[actas17$under_pres_asam_prov!=0], 
+       breaks=100, xlim=c(-100,100), col="darkgrey", prob=T, main="", xlab="Untervoting Irregularities")
+  hist(actas17$SUFRAGANTES_consulta[actas17$under_consulta_prov!=0] - actas17$SUFRAGANTES_asam_prov[actas17$under_consulta_prov!=0], 
+       breaks=100, xlim=c(-100,100), add=T, col=alpha("deeppink", 0.5), prob=T)
+  hist(actas17$SUFRAGANTES_asam_nac[actas17$under_nac_prov!=0] - actas17$SUFRAGANTES_asam_prov[actas17$under_nac_prov!=0], 
+       breaks=100, xlim=c(-100,100), add=T, col=alpha("lightblue", 0.5), prob=T)
+  hist(actas17$SUFRAGANTES_andino[actas17$under_andino_prov!=0] - actas17$SUFRAGANTES_asam_prov[actas17$under_andino_prov!=0], 
+       breaks=100, xlim=c(-100,100), add=T, col=alpha("chartreuse", 0.5), prob=T)
+  
+  ## the undervoting discrepancies are not distributed normal, double exponential (laplace)
+  ## distribution describes them way besser, heavier (?) tails
+  ## -----> also needs to be changed in formula section of manuscript, I don't assume the 
+  ## errors to be normal. 
+  ## in formula section: T_i^e itself needs to be distributed as Laplace(mu, b)
+  ## MLEs of the double exponential (Laplace) distribution 
+  x <- actas17$SUFRAGANTES_andino[actas17$under_andino_prov!=0] - actas17$SUFRAGANTES_asam_prov[actas17$under_andino_prov!=0]
+  x_scale <- seq(min(x[!is.na(x)]),max(x[!is.na(x)]),1) 
+  location_par <- median(x, na.rm = T)
+  scale_par <- sum(abs(x[!is.na(x)]-median(x[!is.na(x)])))/length(x[!is.na(x)])
+  
+  n_est <- dlaplace(x_scale, 
+                    location=location_par, 
+                    scale=scale_par)
+  lines(x_scale, n_est, col="black", lwd=2)
+  ### add text where mu and b is stated at top right corner
+  ### add 2017 to top left corner
+  ### replicate figure for 2019 data, plot side by side
+  
+  
+  
   # chains sorted by turnout
   actas17 <- actas17[order(actas17$SUFRAGANTES_asam_prov),] 
   actas17$id <- 1:nrow(actas17)
