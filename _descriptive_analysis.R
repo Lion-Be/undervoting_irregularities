@@ -46,34 +46,52 @@ load("U:/PhD Electoral Fraud/Papers/Detecting Unbalanced Fraud Approaches From U
 #' --------------------------- 
 
   # univariate distribution of undervoting irregularities 
+  par(mfrow=c(1,1))
   hist(actas17$SUFRAGANTES_pres[actas17$under_pres_asam_prov!=0] - actas17$SUFRAGANTES_asam_prov[actas17$under_pres_asam_prov!=0], 
-       breaks=100, xlim=c(-100,100), col="darkgrey", prob=T, main="", xlab="Untervoting Irregularities")
+       breaks=100, xlim=c(-100,100), col="darkgrey", prob=T, main="", xlab="Untervoting Irregularities", cex.lab=1.2)
+  par(xpd=T)
+  text(-100, 0.09, labels="2017", cex=1.5, font=2)
+  par(xpd=F)
   hist(actas17$SUFRAGANTES_consulta[actas17$under_consulta_prov!=0] - actas17$SUFRAGANTES_asam_prov[actas17$under_consulta_prov!=0], 
        breaks=100, xlim=c(-100,100), add=T, col=alpha("deeppink", 0.5), prob=T)
   hist(actas17$SUFRAGANTES_asam_nac[actas17$under_nac_prov!=0] - actas17$SUFRAGANTES_asam_prov[actas17$under_nac_prov!=0], 
        breaks=100, xlim=c(-100,100), add=T, col=alpha("lightblue", 0.5), prob=T)
   hist(actas17$SUFRAGANTES_andino[actas17$under_andino_prov!=0] - actas17$SUFRAGANTES_asam_prov[actas17$under_andino_prov!=0], 
        breaks=100, xlim=c(-100,100), add=T, col=alpha("chartreuse", 0.5), prob=T)
+ 
   
-  ## the undervoting discrepancies are not distributed normal, double exponential (laplace)
-  ## distribution describes them way besser, heavier (?) tails
-  ## -----> also needs to be changed in formula section of manuscript, I don't assume the 
-  ## errors to be normal. 
-  ## in formula section: T_i^e itself needs to be distributed as Laplace(mu, b)
-  ## MLEs of the double exponential (Laplace) distribution 
-  x <- actas17$SUFRAGANTES_andino[actas17$under_andino_prov!=0] - actas17$SUFRAGANTES_asam_prov[actas17$under_andino_prov!=0]
-  x_scale <- seq(min(x[!is.na(x)]),max(x[!is.na(x)]),1) 
-  location_par <- median(x, na.rm = T)
-  scale_par <- sum(abs(x[!is.na(x)]-median(x[!is.na(x)])))/length(x[!is.na(x)])
+  # fit normal with MLEs 
+  n_est <- dnorm(x_scale, 
+                 mean=mean(x, na.rm=T),
+                 sd=sd(x, na.rm=T))
+  lines(x_scale, n_est, col="black", lwd=3, lty=3)
   
-  n_est <- dlaplace(x_scale, 
-                    location=location_par, 
-                    scale=scale_par)
-  lines(x_scale, n_est, col="black", lwd=2)
-  ### add text where mu and b is stated at top right corner
-  ### add 2017 to top left corner
-  ### replicate figure for 2019 data, plot side by side
+  # fit normal with adjusted MLEs 
+  n_est <- dnorm(x_scale, 
+                 mean=mean(x, na.rm=T),
+                 sd=(1/2) * sd(x, na.rm=T))
+  lines(x_scale, n_est, col="black", lwd=3, lty=2)
   
+  n_est <- dnorm(x_scale, 
+                 mean=mean(x, na.rm=T),
+                 sd=(1/5) * sd(x, na.rm=T))
+  lines(x_scale, n_est, col="black", lwd=3, lty=1)
+  
+  # add legends
+  legend(25, 0.08, legend=c(expression(paste(mu,"= 0, ",sigma," = 1/5 * sd(x)")), 
+                            expression(paste(mu,"= 0, ",sigma," = 1/2 * sd(x)")),
+                            expression(paste(mu,"= 0, ",sigma," = sd(x) (MLE)"))),
+         lty=c(1,2,3), lwd=c(3,3,3), bty = "n", cex=1.2)
+  
+  legend(-100, 0.08, legend=c("Presidential Election",
+                             "National Parliament",
+                             "Andean Parliament",
+                             "National Referendum"),
+         col=c("darkgrey", "deeppink", "lightblue", "chartreuse"), 
+         lwd=3, bty = "n", cex=1.2)
+
+  
+
   
   
   # chains sorted by turnout
