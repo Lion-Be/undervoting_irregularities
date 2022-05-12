@@ -11,17 +11,21 @@ gen_data <- function(entities,         # vector with eligible voters
   turnout_b <- rbinom(length(entities), entities, turnout_probs)
   winner <- rbinom(length(entities), entities, winner_probs)
   winner_share <- winner / turnout_b
-  winner_share[turnout_b == 0] <- 0 ### couldn't I just delete all polling stations with less than 50 voters
+  winner_share[winner_share < 0] <- 0 
+  winner_share[winner_share > 1] <- 1 
   
   # model undervoting discrepancies
   under <- as.integer(rnorm(undervoting_n, 0, undervoting_sd)) #### does my modeled undervoting look like empirical undervoting?????
   turnout_a <- turnout_b
   ids <- sample(1:length(entities), undervoting_n)
   turnout_a[ids] <- turnout_a[ids] + under
-  turnout_share <- turnout_a / entities ### many exceed 1
+  turnout_share <- turnout_a / entities ### some exceed 1
   
-  # introduce fraud
-  winner <- winner + rbinom(undervoting_n, under, winner_share + fraud_para)
+  # introduce fraud [open]
+  favor_winner <- rbinom(undervoting_n, abs(under), winner_share[ids] + fraud_para)
+  ids_adding <- ids[1:length(which(under>0))]
+  ids_remove <- ids[(length(which(under>0))+1):length(ids)]
+  winner[ids_adding] <- winner[ids_adding] + favor_winner[ids_adding]
   winner_share <- winner / turnout_a
   
   # construct data 
@@ -31,29 +35,43 @@ gen_data <- function(entities,         # vector with eligible voters
   
 }
 
+# once I simulated data, check if share of places where winner (simulated) won
+# is same as share where Moreno (empirical) won. 
+# or repeat it 1000 times and see whether it converges. 
+# then fraud and see whether difference is unbiased estimate of fraud parameter. 
+
+
 #' -----------------------------------
 # simulate data for Ecuador 2017 -----
 #' -----------------------------------
+  library(EnvStats) # for ebeta
 
   ### preparation
   load("U:/PhD Electoral Fraud/Papers/02_Detecting Unbalanced Fraud Approaches From Undervoting Irregularities/undervoting_irregularities/actas17.Rdata")
-  ## I could delete polling stations with less than 50 eligible voters and with turnout=1
+  actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delette polling stations with <100 eligible voters
   ## don't I need to model undervoting_sd as empirical sd * 1/5?
   
-  turnout_probs <- rnorm(length(actas17$ELECTORES_REGISTRO_pres), 
-                         mean(actas17$SUFRAGANTES_pres/actas17$ELECTORES_REGISTRO_pres, na.rm=T), 
-                         sd(actas17$SUFRAGANTES_pres/actas17$ELECTORES_REGISTRO_pres, na.rm=T)
-                         )
-  turnout_probs[turnout_probs > 1] <- 1
+  # estimate binomial success probabilities for absolute turnout
+  actas17$turnout_pres <- actas17$SUFRAGANTES_pres / actas17$ELECTORES_REGISTRO_pres
+  actas17$turnout_pres[actas17$turnout_pres > 1] <- 1
+  beta_est <- ebeta(actas17$turnout_pres, method="mle")
   
-  winner_probs <- rnorm(length(actas17$ELECTORES_REGISTRO_pres), 
-                        mean(actas17$MORENO_pres/actas17$SUFRAGANTES_pres, na.rm=T), 
-                        sd(actas17$MORENO_pres/actas17$SUFRAGANTES_pres, na.rm=T)
-  )                            
-  winner_probs[winner_probs < 0] <- 0
+  turnout_probs <- rbeta(length(actas17$ELECTORES_REGISTRO_pres), 
+                         shape1 = beta_est$parameters[1], 
+                         shape2 = beta_est$parameters[2])
   
+  # estimate binomial success probabilities for winner's absolute votes
+  actas17$winnershare_pres <- actas17$MORENO_pres/actas17$SUFRAGANTES_pres
+  beta_est <- ebeta(actas17$winnershare_pres, method="mle")
   
-  undervoting_sd <- sd(actas17$SUFRAGANTES_pres - actas17$SUFRAGANTES_consulta, na.rm=T) 
+  winner_probs <- rbeta(length(actas17$ELECTORES_REGISTRO_pres), 
+                         shape1 = beta_est$parameters[1], 
+                         shape2 = beta_est$parameters[2])
+  
+  # estimate standard deviation of undervoting discrepancies
+  actas17$under_pres_consulta <- (actas17$SUFRAGANTES_pres - actas17$SUFRAGANTES_consulta) ## same number as in descriptive analysis? I deleted all polling stations with n<100 
+  undervoting_sd <- sd(actas17$under_pres_consulta[actas17$under_pres_consulta!=0], na.rm=T) 
+  
   
   ### simulate
   df <- gen_data(entities = actas17$ELECTORES_REGISTRO_pres, 
