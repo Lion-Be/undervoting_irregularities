@@ -11,7 +11,8 @@ gen_data <- function(entities,         # vector with eligible voters
   turnout_b <- rbinom(length(entities), entities, turnout_probs)
   winner <- rbinom(length(entities), turnout_b, winner_probs)
   others <- turnout_b - winner
-
+  winner_share <- winner/turnout_b
+  
   # model undervoting discrepancies
   under <- rnorm(undervoting_n, 0, undervoting_sd) #### does my modeled undervoting look like empirical undervoting?????
   under[under>-1 & under < 0] <- -1
@@ -57,7 +58,7 @@ gen_data <- function(entities,         # vector with eligible voters
   winner[ids_adding] <- winner[ids_adding] + winner_votes[under[(length(ids_fraud)+1):length(under)] > 0]
   others[ids_adding] <- others[ids_adding] + others_votes[under[(length(ids_fraud)+1):length(under)] > 0]
   
-  ids_remove <- ids_fraud[-which(is.element(ids_fraud, ids_adding))]
+  ids_remove <- ids_clean[-which(is.element(ids_clean, ids_adding))]
   winner[ids_remove] <- winner[ids_remove] - winner_votes[under[(length(ids_fraud)+1):length(under)] < 0]
   others[ids_remove] <- others[ids_remove] - others_votes[under[(length(ids_fraud)+1):length(under)] < 0] 
   
@@ -75,101 +76,3 @@ gen_data <- function(entities,         # vector with eligible voters
   return(df)
   
 }
-
-
-
-#' -----------------------------------
-# simulate data for Ecuador 2017 -----
-#' -----------------------------------
-  library(EnvStats) # for ebeta
-
-  #' ---------------------------------
-  # preparation ----------------------
-  #' ---------------------------------
-
-    load("U:/PhD Electoral Fraud/Papers/02_Detecting Unbalanced Fraud Approaches From Undervoting Irregularities/undervoting_irregularities/actas17.Rdata")
-    actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete polling stations with <100 eligible voters
-    ## don't I need to model undervoting_sd as empirical sd * 1/5?
-    
-    # estimate binomial success probabilities for absolute turnout
-    actas17$turnout_pres <- actas17$SUFRAGANTES_pres / actas17$ELECTORES_REGISTRO_pres
-    actas17$turnout_pres[actas17$turnout_pres > 1] <- 1
-    beta_est <- ebeta(actas17$turnout_pres, method="mle")
-    
-    turnout_probs <- rbeta(nrow(actas17), 
-                           shape1 = beta_est$parameters[1], 
-                           shape2 = beta_est$parameters[2])
-    
-    # estimate binomial success probabilities for winner's absolute votes
-    actas17$winnershare_pres <- actas17$MORENO_pres/actas17$SUFRAGANTES_pres
-    beta_est <- ebeta(actas17$winnershare_pres, method="mle")
-    
-    winner_probs <- rbeta(nrow(actas17), 
-                           shape1 = beta_est$parameters[1], 
-                           shape2 = beta_est$parameters[2])
-    
-    # estimate standard deviation of undervoting discrepancies
-    actas17$under_pres_asam_prov <- (actas17$SUFRAGANTES_pres - actas17$SUFRAGANTES_asam_prov) ## same number as in descriptive analysis? I deleted all polling stations with n<100 
-    undervoting_sd <- sd(actas17$under_pres_asam_prov[actas17$under_pres_asam_prov!=0], na.rm=T) 
-    
-    
-  #' -----------------------------------
-  # simulate clean and frauded data ----
-  #' -----------------------------------
-  
-    df_list <- list()  
-    id <- 0
-    for(share_fraud in seq(0, 0.9, 0.1)) {
-      id <- id+1  
-      df_list[[id]] <- gen_data(entities = actas17$ELECTORES_REGISTRO_pres, 
-                                turnout_probs = turnout_probs, 
-                                winner_probs = winner_probs, 
-                                undervoting_n = length(which(actas17$under_pres_asam_prov!=0)), 
-                                undervoting_sd = undervoting_sd, 
-                                share_fraud = share_fraud
-                               )
-    } 
-
- 
-  #' -----------------------------
-  # compare to empirical data ----
-  #' -----------------------------
-
-    # empirical 
-    par(mfrow=c(1,1))
-    plot(actas17$under_pres_asam_prov[actas17$under_pres_asam_prov!=0], 
-         actas17$pw_pres[actas17$under_pres_asam_prov!=0], 
-         xlim=c(0,1), col="darkgrey",  bty="n", pch=20
-    )
-    lw1 <- loess(pw_pres ~ under_pres_asam_prov, data=actas17[actas17$under_pres_asam_prov!=0,])
-    j <- order(actas17[actas17$under_pres_asam_prov!=0,]$under_pres_asam_prov)
-    lines(actas17[actas17$under_pres_asam_prov!=0,]$under_pres_asam_prov[j],lw1$fitted[j],col="lightblue")
-    
-    # simulated clean 
-    df <- df_list[[10]]
-    df$under_share <- abs((df$turnout_a - df$turnout_b) / df$turnout_a)
-    plot(df$under_share[df$under!=0], 
-         df$winner_share[df$under!=0], 
-         xlim=c(0,1), col="darkgrey",  bty="n", pch=20
-    )
-    lw1 <- loess(winner_share ~ under_share, data=df[df$under!=0,])
-    j <- order(df[df$under!=0,]$under_share)
-    lines(df[df$under!=0,]$under_share[j],lw1$fitted[j],col="lightblue")
-    
-    
-  
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-
-
