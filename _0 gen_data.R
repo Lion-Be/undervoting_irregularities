@@ -38,10 +38,15 @@ gen_data <- function(entities,         # vector with eligible voters
    
   # add/remove votes as probabilistic fraud
   if (share_fraud > 0) {
-    favor_winner <- rbinom(length(ids_fraud), abs(under[1:length(ids_fraud)]), 0.9) 
+    favor_winner <- rbinom(length(ids_fraud), 
+                           abs(under[1:length(ids_fraud)]), 
+                           0.8
+                           ) 
     favor_others <- abs(under[1:length(ids_fraud)]) - favor_winner 
       
-    ids_adding <- sample(ids_fraud, length(which(under[1:length(ids_fraud)]>0)))
+    ids_adding <- sample(ids_fraud, 
+                         length(which(under[1:length(ids_fraud)]>0))
+                         )
     winner[ids_adding] <- winner[ids_adding] + favor_winner[under[1:length(ids_fraud)] > 0]
     others[ids_adding] <- others[ids_adding] + favor_others[under[1:length(ids_fraud)] > 0]
     
@@ -51,10 +56,16 @@ gen_data <- function(entities,         # vector with eligible voters
   } # end if
   
   # add/remove votes proportional to winner's vote share at clean polling stations
-  winner_votes <- rbinom(length(ids_clean), abs(under[(length(ids_fraud)+1):length(under)]), winner_share[ids_clean]) 
+  # polling stations with undervoting have same properties (winner vote shares) than polling stations without undervoting
+  winner_votes <- rbinom(length(ids_clean), 
+                         abs(under[(length(ids_fraud)+1):length(under)]), 
+                         winner_share[ids_clean]
+                         ) 
   others_votes <- abs(under[(length(ids_fraud)+1):length(under)]) - winner_votes
   
-  ids_adding <- sample(ids_clean, length(which(under[(length(ids_fraud)+1):length(under)]>0)))
+  ids_adding <- sample(ids_clean, 
+                       length(which(under[(length(ids_fraud)+1):length(under)]>0))
+                       )
   winner[ids_adding] <- winner[ids_adding] + winner_votes[under[(length(ids_fraud)+1):length(under)] > 0]
   others[ids_adding] <- others[ids_adding] + others_votes[under[(length(ids_fraud)+1):length(under)] > 0]
   
