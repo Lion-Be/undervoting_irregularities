@@ -1,5 +1,9 @@
 library(EnvStats) # for ebeta
 library(stringr)
+library(dplyr)
+library(ggplot2)
+library(ggExtra)
+library(ggpubr)
 
 # load data, General Elections 2017
 load("U:/PhD Electoral Fraud/Papers/02_Detecting Unbalanced Fraud Approaches From Undervoting Irregularities/undervoting_irregularities/actas17.Rdata")
@@ -49,7 +53,7 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
   # simulate
   sim_elections <- list()  
   id <- 0
-  for(share in c(0, 0.2, 0.4, 0.6, 0.8)) {
+  for (share in c(0, 0.2, 0.4, 0.6, 0.8)) {
     id <- id+1  
     sim_elections[[id]] <- gen_data(entities = entities, 
                                     turnout_probs = turnout_probs, 
@@ -62,33 +66,99 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
   names(sim_elections) <- str_c("share_fraud = ", c(0, 0.2, 0.4, 0.6, 0.8))
 
   # estimate
-  est_results <- as.data.frame(matrix(NA, nrow=length(sim_elections), ncol=4))
-  colnames(est_results) <- c("true_share", "est_share", "95_lower", "95_upper")
-  est_results$true_share <- c(0, 0.2, 0.4, 0.6, 0.8)
+  est_results_euclid <- as.data.frame(matrix(NA, nrow=length(sim_elections), ncol=4))
+  colnames(est_results_euclid) <- c("true_share", "est_share", "95_lower", "95_upper")
+  est_results_euclid$true_share <- c(0, 0.2, 0.4, 0.6, 0.8)
+  est_results_mahalanobis <- est_results_euclid
   
   for (df in 1:length(sim_elections)) { 
-    est_results[df,2:4] <- est_fraud(entities = entities, 
-                                     turnout_probs = turnout_probs, 
-                                     winner_probs = winner_probs, 
-                                     undervoting_n = undervoting_n, 
-                                     undervoting_sd = undervoting_sd, 
-                                     underperc_emp = sim_elections[[df]]$under_perc[which(sim_elections[[df]]$under_perc!=0)],
-                                     pw_emp = sim_elections[[df]]$winner_share[which(sim_elections[[df]]$under_perc!=0)],
-                                     n_iter = 10
-                                     )
-    print(df)
+    results <- est_fraud(entities = entities, 
+                         turnout_probs = turnout_probs, 
+                         winner_probs = winner_probs, 
+                         undervoting_n = undervoting_n, 
+                         undervoting_sd = undervoting_sd, 
+                         underperc_emp = sim_elections[[df]]$under_perc[which(sim_elections[[df]]$under_perc!=0)],
+                         pw_emp = sim_elections[[df]]$winner_share[which(sim_elections[[df]]$under_perc!=0)],
+                         n_iter = 500
+    )
     
+    est_results_euclid[df,2:4] <- results[["euclidean"]]
+    est_results_mahalanobis[df,2:4] <- results[["mahalanobis"]]
+    
+    print(df)
+    save(est_results_euclid, file="est_results_euclid.RData")
+    save(est_results_mahalanobis, file="est_results_mahalanobis.RData")
   }
     
+
+  
+  
+#' -------------------------------------------------------
+# graphically explore effect of fraud on scatterplot -----
+# using parameters from Ecuador 2017 
+#' -------------------------------------------------------
+
+  # play around with parameters to make plots more informative/more extreme
+  # e.g. just higher undervoting_n
+  # these don't need to mimic parameters from Ecuador, just orientate on them
+  
+  ###### fraud needs to become more extreme in order to mirror in scatterplots
+  ###### or does something go wrong with binding the data?
+  ###### currently: all plots basically look the same
+  ###### also: play around with stat_smooth or geom_smooth?
+  
+  sim_data <- bind_rows(sim_elections)
+  sim_data$true_share <- as.factor(c(rep(0, nrow(sim_data)/5),
+                           rep(0.2, nrow(sim_data)/5),
+                           rep(0.4, nrow(sim_data)/5),
+                           rep(0.6, nrow(sim_data)/5),
+                           rep(0.8, nrow(sim_data)/5))
+  )
+  
+  theme_set(theme_bw())
+  
+  fig3.1 <- sim_data[sim_data$true_share==0 & sim_data$under !=0,] %>%
+    ggplot(aes(x=under_perc, winner_share)) + 
+    xlim(0,1) + ylim(0,1) + 
+    xlab("") + ylab("Winner's vote share") + 
+    ggtitle("Percentage of frauded polling stations = 0") +
+    geom_point(alpha=0.8, color="grey", shape=1, size=3) +
+    theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank())
+  fig3.1 <- fig3.1 + geom_smooth(method="loess", se=F, col="orange")
+  
+  fig3.2 <- sim_data[sim_data$true_share==0.2 & sim_data$under !=0,] %>%
+    ggplot(aes(x=under_perc, winner_share)) + 
+    xlim(0,1) + ylim(0,1) + 
+    xlab("") + ylab("") + 
+    ggtitle("Percentage of frauded polling stations = 0.2") +
+    geom_point(alpha=0.8, color="grey", shape=1, size=3) +
+    theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank())
+  fig3.2 <- fig3.2 + geom_smooth(method="loess", se=F, col="orange")
+  
+  fig3.3 <- sim_data[sim_data$true_share==0.4 & sim_data$under !=0,] %>%
+    ggplot(aes(x=under_perc, winner_share)) + 
+    xlim(0,1) + ylim(0,1) + 
+    xlab("Percentage of discrepant votes") + ylab("Winner's vote share") + 
+    ggtitle("Percentage of frauded polling stations = 0.4") +
+    geom_point(alpha=0.8, color="grey", shape=1, size=3) +
+    theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank())
+  fig3.3 <- fig3.3 + geom_smooth(method="loess", se=F, col="orange")
+  
+  fig3.4 <- sim_data[sim_data$true_share==0.6 & sim_data$under !=0,] %>%
+    ggplot(aes(x=under_perc, winner_share)) + 
+    xlim(0,1) + ylim(0,1) + 
+    xlab("Percentage of discrepant votes") + ylab("") + 
+    ggtitle("Percentage of frauded polling stations = 0.6") +
+    geom_point(alpha=0.8, color="grey", shape=1, size=3) +
+    theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank())
+  fig3.4 <- fig3.4 + geom_smooth(method="loess", se=F, col="orange")
+  
+  ggarrange(fig3.1, fig3.2, fig3.3, fig3.4, 
+            ncol=2, nrow=2)
+  
+  
+  
  
-  
-  
-  
-  
-  
-
-
-
 
 
 
