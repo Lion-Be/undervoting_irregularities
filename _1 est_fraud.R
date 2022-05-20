@@ -10,7 +10,7 @@ est_fraud <- function(entities,         # vector with eligible voters
                       ) {
   
   dat_emp <- as.data.frame(cbind(underperc_emp, pw_emp))
-  dat_emp <- dat_emp[order(dat_emp$underperc_emp),]
+  dat_emp <- dat_emp[order(dat_emp$pw_emp),]
   colnames(dat_emp) <- c("under_perc", "winner_share")
   
   euc_estimate <- mahalanobis_estimate <-
@@ -36,7 +36,7 @@ est_fraud <- function(entities,         # vector with eligible voters
       dat_sim <- as.data.frame(cbind(df$under_perc, df$winner_share))
       colnames(dat_sim) <- c("under_perc", "winner_share")
       dat_sim <- dat_sim[dat_sim$under_perc!=0,]
-      dat_sim <- dat_sim[order(dat_sim$under_perc),]
+      dat_sim <- dat_sim[order(dat_sim$winner_share),]
       
       # calculate Euclidean distance between each row in dat_emp and dat_sim, sum up
       euc_dist[id] <- sum(diag(rdist(dat_emp, dat_sim)))
