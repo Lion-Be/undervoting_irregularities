@@ -4,6 +4,7 @@ library(dplyr)
 library(ggplot2)
 library(ggExtra)
 library(ggpubr)
+library(fields)
 
 # load data, General Elections 2017
 load("U:/PhD Electoral Fraud/Papers/02_Detecting Unbalanced Fraud Approaches From Undervoting Irregularities/undervoting_irregularities/actas17.Rdata")
@@ -50,7 +51,7 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
 # estimate share_fraud 
 #' -----------------------------------------------------------------------
 
-  # simulate
+  # simulate artifical elections
   sim_elections <- list()  
   id <- 0
   for (share in c(0, 0.2, 0.4, 0.6, 0.8)) {
@@ -60,7 +61,9 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
                                     winner_probs = winner_probs, 
                                     undervoting_n = undervoting_n, 
                                     undervoting_sd = undervoting_sd, 
-                                    share_fraud = share
+                                    share_fraud = share, 
+                                    under = NA, 
+                                    ids = NA
     )
   } 
   names(sim_elections) <- str_c("share_fraud = ", c(0, 0.2, 0.4, 0.6, 0.8))
@@ -79,7 +82,10 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
                          undervoting_sd = undervoting_sd, 
                          underperc_emp = sim_elections[[df]]$under_perc[which(sim_elections[[df]]$under_perc!=0)],
                          pw_emp = sim_elections[[df]]$winner_share[which(sim_elections[[df]]$under_perc!=0)],
-                         n_iter = 500
+                         under = sim_elections[[df]]$under[which(sim_elections[[df]]$under!=0)],
+                         ids = which(sim_elections[[df]]$under!=0),
+                         n_iter = 1,
+                         k = 100
     )
     
     est_results_euclid[df,2:4] <- results[["euclidean"]]
