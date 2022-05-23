@@ -4,7 +4,9 @@ gen_data <- function(entities,         # vector with eligible voters
                      winner_probs,     # binomial success probs, votes for winner
                      undervoting_n,    # n of entities with undervoting
                      undervoting_sd,   # sd of undervoting distribution 
-                     share_fraud       # share of polling stations with undervoting at which probabilistic fraud is happening
+                     share_fraud,      # share of polling stations with undervoting at which probabilistic fraud is happening
+                     under = NA,       # vector of undervoting discrepancies
+                     ids = NA          # vector of ids with undervoting discrepancies
                      ) {
   
   # model absolute baseline turnout and absolute votes for winner
@@ -14,11 +16,13 @@ gen_data <- function(entities,         # vector with eligible voters
   winner_share <- winner/turnout_b
   
   # model undervoting discrepancies
-  under <- rnorm(undervoting_n, 0, undervoting_sd) #### does my modeled undervoting look like empirical undervoting?????
-  under[under>-1 & under < 0] <- -1
-  under[under<1 & under > 0] <- 1
-  under <- as.integer(under)
- 
+  if (is.na(under)[1]) {
+    under <- rnorm(undervoting_n, 0, undervoting_sd) #### does my modeled undervoting look like empirical undervoting?????
+    under[under>-1 & under < 0] <- -1
+    under[under<1 & under > 0] <- 1
+    under <- as.integer(under)
+  }
+  
   # favor_winner <- rbinom(undervoting_n, abs(under), winner_share[ids] + fraud_para) 
   ##### so: I first have undervoting_n polling stations with undervoting
   ##### define a *share* (that I can iterate over)
@@ -31,7 +35,8 @@ gen_data <- function(entities,         # vector with eligible voters
   ##### at all polling stations with undervoting. 
  
   # sample clean and frauded polling stations among those with undervoting discrepancies
-  ids <- sample(1:length(entities), undervoting_n)
+  if(is.na(ids)[1]) 
+    ids <- sample(1:length(entities), undervoting_n)
   ids_fraud <- sample(ids, undervoting_n * share_fraud)
   ids_clean <- ids[-which(is.element(ids, ids_fraud))]
   if (share_fraud == 0) ids_clean <- ids               
