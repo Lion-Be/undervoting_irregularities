@@ -61,39 +61,30 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
                                     winner_probs = winner_probs, 
                                     undervoting_n = undervoting_n, 
                                     undervoting_sd = undervoting_sd, 
-                                    share_fraud = share, 
-                                    under = NA, 
-                                    ids = NA
+                                    share_fraud = share
     )
   } 
   names(sim_elections) <- str_c("share_fraud = ", c(0, 0.2, 0.4, 0.6, 0.8))
 
   # estimate
-  est_results_euclid <- as.data.frame(matrix(NA, nrow=length(sim_elections), ncol=4))
-  colnames(est_results_euclid) <- c("true_share", "est_share", "95_lower", "95_upper")
-  est_results_euclid$true_share <- c(0, 0.2, 0.4, 0.6, 0.8)
-  est_results_mahalanobis <- est_results_euclid
+  est_results <- as.data.frame(matrix(NA, nrow=length(sim_elections), ncol=4))
+  colnames(est_results) <- c("true_share", "est_share", "95_lower", "95_upper")
+  est_results$true_share <- c(0, 0.2, 0.4, 0.6, 0.8)
   
   for (df in 1:length(sim_elections)) { 
-    results <- est_fraud(entities = entities, 
-                         turnout_probs = turnout_probs, 
-                         winner_probs = winner_probs, 
-                         undervoting_n = undervoting_n, 
-                         undervoting_sd = undervoting_sd, 
-                         underperc_emp = sim_elections[[df]]$under_perc[which(sim_elections[[df]]$under_perc!=0)],
-                         pw_emp = sim_elections[[df]]$winner_share[which(sim_elections[[df]]$under_perc!=0)],
-                         under = sim_elections[[df]]$under[which(sim_elections[[df]]$under!=0)],
-                         ids = which(sim_elections[[df]]$under!=0),
-                         n_iter = 1,
-                         k = 100
-    )
-    
-    est_results_euclid[df,2:4] <- results[["euclidean"]]
-    est_results_mahalanobis[df,2:4] <- results[["mahalanobis"]]
-    
-    print(df)
-    save(est_results_euclid, file="est_results_euclid.RData")
-    save(est_results_mahalanobis, file="est_results_mahalanobis.RData")
+    est_results[df,2:4] <- est_fraud(entities = entities, 
+                                     turnout = actas17$turnout_pres,
+                                     # turnout_probs = turnout_probs, 
+                                     winnershare = actas17$winnershare_pres,
+                                     # winner_probs = winner_probs, 
+                                     undervoting = actas17$under_pres_asam_prov[-which(is.na(actas17$under_pres_asam_prov) | actas17$under_pres_asam_prov == 0)],
+                                     underperc_emp = sim_elections[[df]]$under_perc[which(sim_elections[[df]]$under_perc!=0)],
+                                     pw_emp = sim_elections[[df]]$winner_share[which(sim_elections[[df]]$under_perc!=0)],
+                                     n_iter = 100, 
+                                     n_postdraws = 500, 
+                                     n_burnin = 400
+                                     )
+    save(est_results, file="est_results.RData")
   }
     
 
