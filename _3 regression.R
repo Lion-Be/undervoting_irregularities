@@ -5,6 +5,8 @@
 
 library(betareg)
 library(stargazer)
+library(sf)
+library(tmap)
 
 # load data 
 load("U:/PhD Electoral Fraud/Papers/02_Detecting Unbalanced Fraud Approaches From Undervoting Irregularities/undervoting_irregularities/actas17.Rdata")
@@ -49,8 +51,20 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
   # share of blank votes
   actas17$blank_pres <- actas17$VOTOS_EN_BLANCO_pres / actas17$SUFRAGANTES_pres
   
+  
+#' -------------------------------------------
+# 1. visualize dependent variable ------------
+#' -------------------------------------------
+
+  ecu <- read_sf("U:/PhD Electoral Fraud/Papers/02_Detecting Unbalanced Fraud Approaches From Undervoting Irregularities/undervoting_irregularities/ECU_shapefile/ECU_adm3.shp")
+  tm_shape(ecu) +
+    tm_borders()
+  
+  # https://bookdown.org/nicohahn/making_maps_with_r5/docs/tmap.html
+  
+  
 #' -----------------------
-# 1. modeling ------------
+# 2. modeling ------------
 #' -----------------------
 
   excluded_cases <- c(which(actas17$under_pres_asam_prov==0), which(actas17$under_pres_asam_prov>=1))
