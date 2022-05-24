@@ -1,12 +1,13 @@
 # define function
-gen_data <- function(entities,         # vector with eligible voters
-                     turnout_probs,    # binomial success probs, turnout
-                     winner_probs,     # binomial success probs, votes for winner
-                     undervoting_n,    # n of entities with undervoting
-                     undervoting_sd,   # sd of undervoting distribution 
-                     share_fraud,      # share of polling stations with undervoting at which probabilistic fraud is happening
-                     under = NA,       # vector of undervoting discrepancies
-                     ids = NA          # vector of ids with undervoting discrepancies
+gen_data <- function(entities,          # vector with eligible voters
+                     turnout_probs,     # binomial success probs, turnout
+                     winner_probs,      # binomial success probs, votes for winner
+                     undervoting_n,     # n of entities with undervoting
+                     undervoting_sd,    # sd of undervoting distribution 
+                     share_fraud,       # share of polling stations with undervoting at which probabilistic fraud is happening
+                     theta_fraud = 0.8, # theta parameter for constructing favor_winner
+                     under = NA,        # vector of undervoting discrepancies
+                     ids = NA           # vector of ids with undervoting discrepancies
                      ) {
   
   # model absolute baseline turnout and absolute votes for winner
@@ -45,7 +46,7 @@ gen_data <- function(entities,         # vector with eligible voters
   if (share_fraud > 0) {
     favor_winner <- rbinom(length(ids_fraud), 
                            abs(under[1:length(ids_fraud)]), 
-                           0.8
+                           theta_fraud
                            ) 
     favor_others <- abs(under[1:length(ids_fraud)]) - favor_winner 
       
