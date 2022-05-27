@@ -51,6 +51,7 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
 # estimate share_fraud 
 #' -----------------------------------------------------------------------
 
+  set.seed(12345)
   # simulate artifical elections
   sim_elections <- list()  
   id <- 0
@@ -72,23 +73,23 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
   est_results$true_share <- c(0, 0.2, 0.4, 0.6, 0.8)
   
   for (df in 1:length(sim_elections)) { 
-    est_results[df,2:4] <- est_fraud(entities = entities, 
-                                     turnout = actas17$turnout_pres,
-                                     # turnout_probs = turnout_probs, 
-                                     winnershare = actas17$winnershare_pres,
-                                     # winner_probs = winner_probs, 
-                                     undervoting = actas17$under_pres_asam_prov[-which(is.na(actas17$under_pres_asam_prov) | actas17$under_pres_asam_prov == 0)],
-                                     underperc_emp = sim_elections[[df]]$under_perc[which(sim_elections[[df]]$under_perc!=0)],
-                                     pw_emp = sim_elections[[df]]$winner_share[which(sim_elections[[df]]$under_perc!=0)],
-                                     n_iter = 100, 
+    est_results[df,2:4] <- est_fraud(eligible = entities, 
+                                     turnout_main = sim_elections[[df]]$turnout_a,
+                                     turnout_baseline = sim_elections[[df]]$turnout_b,
+                                     winner_main = sim_elections[[df]]$winner,
+                                     # undervoting_raw = actas17$under_pres_asam_prov[-which(is.na(actas17$under_pres_asam_prov) | actas17$under_pres_asam_prov == 0)],
+                                     # underperc_emp = sim_elections[[df]]$under_perc[which(sim_elections[[df]]$under_perc!=0)],
+                                     uncertainty = c("fundamental", "estimation"),
+                                     n_iter = 50, 
+                                     n_iter2 = 20,
                                      n_postdraws = 500, 
-                                     n_burnin = 400
+                                     n_burnin = 400,
+                                     seed = 12345
                                      )
     save(est_results, file="est_results.RData")
   }
     
 
-  
   
 #' -------------------------------------------------------
 # graphically explore effect of fraud on scatterplot -----
