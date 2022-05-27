@@ -82,13 +82,14 @@ gen_data <- function(entities,          # vector with eligible voters
   # redefine variables
   turnout_a <- winner + others
   turnout_a_share <- turnout_a / entities
+  turnout_b_share <- turnout_b / entities
   under_perc <- abs((turnout_a - turnout_b) / turnout_a)
   winner_share <- winner / turnout_a
   others_share <- others / turnout_a
   
   # construct data 
   under <- turnout_a - turnout_b
-  df <- as.data.frame(cbind(entities, turnout_a, turnout_b, under, under_perc, turnout_a_share, 
+  df <- as.data.frame(cbind(entities, turnout_a, turnout_b, under, under_perc, turnout_a_share, turnout_b_share, 
                       winner, others, winner_share, others_share))
   return(df)
   
