@@ -1,30 +1,69 @@
 # define function 
-est_fraud <- function(entities,         # vector with eligible voters
-                      turnout,
-                      # turnout_probs,    # binomial success probs, turnout
-                      winnershare,
-                      # winner_probs,     # binomial success probs, votes for winner
-                      undervoting,      # vector with raw undervoting discrepancies
-                      underperc_emp,    # undervoting extent empirical of length(entities)
-                      pw_emp,           # winner's vote share empirical of length(entities)
-                      n_iter = 50,     # number of iterations for mean estimation (estimation uncertainty)
+est_fraud <- function(eligible, # vector with eligible voters
+                      turnout_main, # vector with absolute turnout across entities in main election, n=length(eligible)
+                      turnout_baseline, # vector with absolute turnout across entities in baseline election, n=length(eligible)
+                      winner_main, # vector with absolute number of votes for winner in main election
+                      uncertainty = c("fundamental", "estimation"), # which types of uncertainty should be incorporated 
+                      n_iter = 50,      # number of iterations underlying mean estimation (estimation uncertainty)
+                      n_iter2 = 100, # number of times mean is estimated (estimation uncertainty)
                       n_postdraws = 500,# number of posterior draws for parameters (fundamental uncertainty)
-                      n_burnin = 499,   # burn-in period
-                      seed = 12345
+                      n_burnin = 400,   # burn-in period (fundamental uncertainty)
+                      seed = 12345 # reproduction
                       ) {
   
-  #' ----------------------------------
-  # set up empirical data -------------
-  #' ----------------------------------
+  #' -------------------
+  # set up -------------
+  #' -------------------
+  set.seed(seed)
+  
+  if (!is.element("estimation", uncertainty))
+    stop("is.element('estimation', uncertainty) == FALSE. Model cannot be fit without incorporating estimation uncertainty.")
+  
+  turnoutshare_baseline <- turnout_baseline / eligible
+  turnoutshare_baseline[turnoutshare_baseline > 1] <- 1
+  winnershare_main <- winner_main / turnout_main
+  winnershare_main[winnershare_main < 0] <- 0
+  winnershare_main[winnershare_main > 1] <- 1
+  undervoting <- turnout_main - turnout_baseline
+  undervoting <- undervoting[-which(is.na(undervoting) | undervoting == 0)]
+  underperc_emp <- abs((turnout_main - turnout_baseline) / turnout_main)
+  underperc_emp <- underperc_emp[which(turnout_main != turnout_baseline)]
+  
+  #' ---------------------------------------------
+  # construct data frame (empirical) -------------
+  #' ---------------------------------------------
+  pw_emp <- winnershare_main[which(turnout_main != turnout_baseline)]
   dat_emp <- as.data.frame(cbind(underperc_emp, pw_emp))
   dat_emp <- dat_emp[order(dat_emp$pw_emp),]
   colnames(dat_emp) <- c("under_perc", "winner_share")
   
   
-  #' ------------------------------------------------------------
-  # model fundamental uncertainty around parameters -------------
-  #' ------------------------------------------------------------
+  #' ----------------------------------------------------------
+  # estimate parameters from data (point estimates, MLE) ------
+  #' ----------------------------------------------------------
+  if (!is.element("fundamental", uncertainty)) {
   
+    # estimate standard deviation of undervoting distribution (only non-zero entries)
+    undervoting_sigma <- sd(undervoting) 
+    
+    # estimate binomial success probabilities for absolute turnout
+    turnout_beta_est <- ebeta(turnoutshare_baseline, method="mle")
+    turnout_alpha <- turnout_beta_est$parameters[1]
+    turnout_beta <- turnout_beta_est$parameters[2]
+    
+    # estimate binomial success probabilities for winner's absolute votes
+    winner_beta_est <- ebeta(winnershare_main, method="mle")
+    winnershare_alpha <- winner_beta_est$parameters[1]
+    winnershare_beta <- winner_beta_est$parameters[2]
+    
+  } # end if
+  
+  
+  #' ---------------------------------------------------------------------------------------
+  # model fundamental uncertainty around parameters (posteriors, Bayesian estimation) ------
+  #' ---------------------------------------------------------------------------------------
+  if (is.element("fundamental", uncertainty)) {
+    
     # rstan setup
     if (!is.element("rstan", (.packages()))) library(rstan)
     rstan_options(auto_write = TRUE) # to avoid recompilation of unchanged Stan programs
@@ -85,8 +124,9 @@ est_fraud <- function(entities,         # vector with eligible voters
     
     ")
     write(x=model_turnout_probs, file="model_turnout_probs.stan", append=FALSE)
-    turnout <- turnout[-which(is.na(turnout) | turnout == 0 | turnout ==1)]
-    turnout_data <- list(turnout = turnout, N = length(turnout))
+    if (length(which(turnoutshare_baseline == 0 | turnoutshare_baseline ==1)) > 0)
+      turnoutshare_baseline <- turnoutshare_baseline[-which(turnoutshare_baseline == 0 | turnoutshare_baseline ==1)]
+    turnout_data <- list(turnout = turnoutshare_baseline, N = length(turnoutshare_baseline))
     m_turnout <- stan(
       file = "model_turnout_probs.stan",
       data = turnout_data, 
@@ -118,8 +158,9 @@ est_fraud <- function(entities,         # vector with eligible voters
     
     ")
     write(x=model_winnershare_probs, file="model_winnershare_probs.stan", append=FALSE)
-    winnershare <- winnershare[-which(is.na(winnershare) | winnershare == 0 | winnershare ==1)]
-    winnershare_data <- list(winnershare = winnershare, N = length(winnershare))
+    if (length(which(winnershare_main == 0 | winnershare_main ==1)) > 0)
+      winnershare_main <- winnershare_main[which(winnershare_main == 0 | winnershare_main ==1)]
+    winnershare_data <- list(winnershare = winnershare_main, N = length(winnershare_main))
     m_winnershare <- stan(
       file = "model_winnershare_probs.stan",
       data = winnershare_data, 
@@ -130,12 +171,24 @@ est_fraud <- function(entities,         # vector with eligible voters
     winnershare_alpha <- as.matrix(m_winnershare)[,"alpha"] 
     winnershare_beta <- as.matrix(m_winnershare)[,"beta"]
     
-    
+  } # end if
+  
   
   #' ---------------------------
   # estimate fraud -------------
   #' --------------------------- 
-    
+  
+    if (!is.element("fundamental", uncertainty)) {
+      # simply iterate over fraud estimation n_iter2 times, always with 
+      # same parameter values estimated by MLE
+      n_postdraws <- n_iter2 
+      turnout_alpha <- rep(turnout_alpha, n_postdraws)
+      turnout_beta <- rep(turnout_beta, n_postdraws)
+      winnershare_alpha <- rep(winnershare_alpha, n_postdraws)
+      winnershare_beta <- rep(winnershare_beta, n_postdraws)
+      undervoting_sigma <- rep(undervoting_sigma, n_postdraws)
+    }
+  
     euc_estimate_postdraw <- rep(NA, n_postdraws)
     for (post_draw in 1:n_postdraws) {
       
@@ -148,9 +201,9 @@ est_fraud <- function(entities,         # vector with eligible voters
         id_share <- id_share+1
         
         for (iter in 1:n_iter) {
-          df <- gen_data(entities = entities, 
-                         turnout_probs = rbeta(length(entities), turnout_alpha[post_draw], turnout_beta[post_draw]), 
-                         winner_probs = rbeta(length(entities), winnershare_alpha[post_draw], winnershare_beta[post_draw]),  
+          df <- gen_data(entities = eligible, 
+                         turnout_probs = rbeta(length(eligible), turnout_alpha[post_draw], turnout_beta[post_draw]), 
+                         winner_probs = rbeta(length(eligible), winnershare_alpha[post_draw], winnershare_beta[post_draw]),  
                          undervoting_n = length(undervoting), 
                          undervoting_sd = undervoting_sigma[post_draw], 
                          share_fraud = share
@@ -168,13 +221,14 @@ est_fraud <- function(entities,         # vector with eligible voters
         } # end for iter
         
         euc_dist[id_share] <- mean(euc_dist_iter[!euc_dist_iter==Inf])
-        print(id_share)
+        print(str_c("+++Simulating election results, share_fraud = ", share, "+++"))
         
       } # end for share
     
       # identify fraud parameter that minimizes distance metric
-      euc_estimate_postdraw <- seq(0, 0.99, 0.02)[which.min(euc_dist)]
-      print(str_c("post_draw = ", post_draw))
+      euc_estimate_postdraw[post_draw] <- seq(0, 0.99, 0.02)[which.min(euc_dist)]
+      if (is.element("fundamental", uncertainty)) 
+        print(str_c("Simulations finished for ", post_draw, " out of ", n_postdraws, " posterior samples."))
       
     } # end for post_draw
     
