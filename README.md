@@ -1,7 +1,6 @@
 # Statistical Election Fraud Detection 
 ## :star: Motivation 
-This project develops a statistical method to quantify the degree of systematic manipulation that is inherent to fine-graded election results available 
-across a large number of polling stations. Read the full paper HERE. `Forensic Data Analytics` `Fraud Detection` 
+This project develops a statistical method to quantify the degree of systematic manipulation that is inherent to fine-graded election results. Read the full paper HERE. `Forensic Data Analytics` `Fraud Detection` 
 
 Often times, countries hold concurrent electoral contests on voting day. When voters arrive at the polling station, they get handed out multiple ballots for different 
 races such as 
@@ -24,14 +23,9 @@ The plots below visualize the extent of discrepancies for different years across
 ![alt-text-1](undervoting_2017.png) ![alt-text-2](undervoting_2019.png)
 
 ## How I built the method
-The unsupervised machine learning method that I built separates ballot discrepancies that are due to random errors from systematic discrepancies that are due to fraud. I estimate the share of polling stations where systematic manipulation was executed and discrepancies are non-random. $N_i$ is the number of eligible voters across $i=1,...,n$ polling stations. $\mathcal{T}_i \in \[0,N_i\]$ denotes the absolute number of turned out voters for a particular electoral race of interest. The share of votes the winning candidate (party) received is denoted by $p_i \in [0,1]$. I show that at each pollign station, random errors affect the vote shares of all candidates proportionally to their electoral strength as 
+The unsupervised machine learning method that I built separates ballot discrepancies that are due to random errors from systematic discrepancies that are due to fraud. I estimate the share of polling stations where systematic manipulation was executed and discrepancies are non-random. $N_i$ is the number of eligible voters across $i=1,...,n$ polling stations. $T_i \in \[0,N_i\]$ denotes the absolute number of turned out voters for a particular electoral race of interest. The share of votes the winning candidate (party) received is denoted by $p_i \in [0,1]$. I show that at each pollign station, random errors affect the vote shares of all candidates proportionally to their electoral strength as 
 
-\begin{equation}
-    \begin{aligned}
-    E[p_i] &= \frac{\mathcal{T}_i^*}{\mathcal{T}_i^*+\mathcal{T}_i^\epsilon} \frac{V_i^*}{\mathcal{T}_i^*} + \frac{\mathcal{T}_i^\epsilon}{\mathcal{T}_i^*+\mathcal{T}_i^\epsilon} E\big[\frac{V_i^\epsilon}{\mathcal{T}_i^\epsilon}\big] \\
-    &= \frac{\mathcal{T}_i^*}{\mathcal{T}_i^*+\mathcal{T}_i^\epsilon} \frac{V_i^*}{\mathcal{T}_i^*} + \frac{\mathcal{T}_i^\epsilon}{\mathcal{T}_i^*+\mathcal{T}_i^\epsilon} \frac{V_i^*}{\mathcal{T}_i^*} \\
-    &=\frac{V_i^*}{\mathcal{T}_i^*}.
-\end{aligned}
-\end{equation}
+![alt-text-1](eq1.png)
+
 
 
