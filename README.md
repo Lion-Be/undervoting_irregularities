@@ -23,9 +23,16 @@ The plots below visualize the extent of discrepancies for different years across
 ![alt-text-1](undervoting_2017.png) ![alt-text-2](undervoting_2019.png)
 
 ## How I built the method
-The unsupervised machine learning method that I built separates ballot discrepancies that are due to random errors from systematic discrepancies that are due to fraud. I estimate the share of polling stations where systematic manipulation was executed and discrepancies are non-random. $N_i$ is the number of eligible voters across $i=1,...,n$ polling stations. $T_i \in \[0,N_i\]$ denotes the absolute number of turned out voters for a particular electoral race of interest. The share of votes the winning candidate (party) received is denoted by $p_i \in [0,1]$. I show that at each pollign station, random errors affect the vote shares of all candidates proportionally to their electoral strength as 
+The unsupervised machine learning method that I built separates ballot discrepancies that are due to random errors from systematic discrepancies that are due to fraud. I estimate the share of polling stations where systematic manipulation was executed and discrepancies are non-random. 
 
-![alt-text-1](eq1.png)
+$N_i$ is the number of eligible voters across $i=1,...,n$ polling stations. $T_i \in \[0,N_i\]$ denotes the absolute number of turned out voters for a particular electoral race of interest. The share of votes the winning candidate (party) received is denoted by $p_i \in [0,1]$. I show that at each polling station, random errors affect the vote shares of all candidates proportionally to their electoral strength as 
+
+<img src="eq1.png" width="350">
+
+Even if human errors and electoral maladministration are excessive, the extent of discrepancies is unrelated to candidates' vote shares in expectation as 
+
+<img src="eq2.png" width="500">
+<img src="eq3.png" width="300">
 
 
 
