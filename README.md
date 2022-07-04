@@ -15,19 +15,25 @@ races such as
 ### One polling station
 Look at these scanned vote tabulation sheets from the Local Elections 2019 in Ecuador, South America. They come from the same polling station. The left tally depicts the vote tabulation for provincial representatives. The right tally tabulates votes for the city mayor. For provincial representatives (left), 54 ballots have been observed including four blank and two null votes. For the mayorial election, 208 votes have been counted including nineteen blank and fourteen null votes. The magnitude of the inconsistencies is a multiple of the vote distances between the individual candidates.
 
-![alt-text-1](acta_prefecto.png "Election of Provincial Representatives") ![alt-text-2](acta_alcalde.png "Election of City Mayor")
+<p float="left">
+  <img src="acta_prefecto.png" width="300" />
+  <img src="acta_alcalde.png" width="330" /> 
+</p>
 
 ### Across the country
 The plots below visualize the extent of discrepancies for different years across ~40,000 polling stations in the country. Polling stations are sorted on the x-axis. Whenever the gray lines diverge from the green line, there are discrepancies. 
 
-![alt-text-1](undervoting_2017.png) ![alt-text-2](undervoting_2019.png)
+<p float="left">
+  <img src="undervoting_2017.png" width="330" />
+  <img src="undervoting_2019.png" width="335" /> 
+</p>
 
-## :pencil2: Formal Treatment
+## :mortar_board: Formal Treatment
 The unsupervised machine learning method that I built separates ballot discrepancies that are due to random errors from systematic discrepancies that are due to fraud. I estimate the share of polling stations where systematic manipulation was executed and discrepancies are non-random. 
 
 $N_i$ is the number of eligible voters across $i=1,...,n$ polling stations. $T_i \in \[0,N_i\]$ denotes the absolute number of turned out voters for a particular electoral race of interest. The share of votes the winning candidate (party) received is denoted by $p_i \in [0,1]$. I show that at each polling station, random errors affect the vote shares of all candidates proportionally to their electoral strength as 
 
-<img src="eq1.png" width="350">
+<img src="eq1.png" width="300">
 
 Even if human errors and electoral maladministration are excessive, the extent of discrepancies is unrelated to candidates' vote shares in expectation as 
 
@@ -41,6 +47,7 @@ As a general intuition, the unsupervised model detects systematic manipulation b
 - finding the set of artificial elections that—in expectation—minimizes the distance to the empirical data 
 
 The fraud parameter that was used to construct this set of artificial elections serves as the estimate of fraud
+
 <img src="eq4.png" width="180">
 
 Check out the full paper and analysis HERE. 
