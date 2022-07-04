@@ -16,8 +16,5 @@ ballots received at each polling station necessarily needs to be the same* acros
 ## :question: Problem 
 Look at these scanned vote tabulation sheets from the Local Elections 2019 in Ecuador, South America. 
 
-<p float="left">
-  <img src="/acta_prefecto.pdf" width="100" />
-  <img src="/acta_alcalde.pdf" width="100" /> 
-</p>
+![alt-text-1](acta_prefecto.png "title-1") ![alt-text-2](acta_alcalde.png "title-2")
 
