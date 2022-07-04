@@ -22,7 +22,7 @@ The plots below visualize the extent of discrepancies for different years across
 
 ![alt-text-1](undervoting_2017.png) ![alt-text-2](undervoting_2019.png)
 
-## How I built the method
+## :pencil2: Formal Treatment
 The unsupervised machine learning method that I built separates ballot discrepancies that are due to random errors from systematic discrepancies that are due to fraud. I estimate the share of polling stations where systematic manipulation was executed and discrepancies are non-random. 
 
 $N_i$ is the number of eligible voters across $i=1,...,n$ polling stations. $T_i \in \[0,N_i\]$ denotes the absolute number of turned out voters for a particular electoral race of interest. The share of votes the winning candidate (party) received is denoted by $p_i \in [0,1]$. I show that at each polling station, random errors affect the vote shares of all candidates proportionally to their electoral strength as 
@@ -31,8 +31,16 @@ $N_i$ is the number of eligible voters across $i=1,...,n$ polling stations. $T_i
 
 Even if human errors and electoral maladministration are excessive, the extent of discrepancies is unrelated to candidates' vote shares in expectation as 
 
-<img src="eq2.png" width="500">
-<img src="eq3.png" width="300">
+<img src="eq2.png" width="700">
+<img src="eq3.png" width="180">
 
+## 🛠 How I built the method
+As a general intuition, the unsupervised model detects systematic manipulation by
+- simulating a range of artificial elections which mimic the observed data that are either clean or manipulated to different degrees $S$
+- quantifying the average Euclidean distance $M$ between the empirical data and each set of simulated elections
+- finding the set of artificial elections that—in expectation—minimizes the distance to the empirical data 
 
+The fraud parameter that was used to construct this set of artificial elections serves as the estimate of fraud
+<img src="eq4.png" width="180">
 
+Check out the full paper and analysis HERE. 
