@@ -1,6 +1,6 @@
 # Statistical Election Fraud Detection 
 ## :star: Motivation 
-This project develops a statistical method to quantify the degree of systematic manipulation that is inherent to fine-graded election results. Read the full paper HERE. `Forensic Data Analytics` `Fraud Detection` 
+This project develops a statistical method to quantify the degree of systematic manipulation that is inherent to fine-graded election results. I focus on one selected pattern: Different numbers of ballots received at the same polling stations for concurrent elections that take place simultaneously. Read the full paper HERE. `Forensic Data Analytics` `Fraud Detection` 
 
 Often times, countries hold concurrent electoral contests on voting day. When voters arrive at the polling station, they get handed out multiple ballots for different 
 races such as 
