@@ -37,8 +37,7 @@ $N_i$ is the number of eligible voters across $i=1,...,n$ polling stations. $T_i
 
 Even if human errors and electoral maladministration are excessive, the extent of discrepancies is unrelated to candidates' vote shares in expectation as 
 
-<img src="eq2.png" width="700">
-<img src="eq3.png" width="180">
+<img src="eq23.png" width="720">
 
 ## 🛠 How I built the method
 As a general intuition, the unsupervised model detects systematic manipulation by
@@ -48,6 +47,22 @@ As a general intuition, the unsupervised model detects systematic manipulation b
 
 The fraud parameter that was used to construct this set of artificial elections serves as the estimate of fraud
 
-<img src="eq4.png" width="180">
+<img src="eq4.png" width="240">
 
+## :construction_worker: How to use it
+I have implemented the method into a handy-to-use R package available HERE. The user needs to provide a dataset with fine-graded voting results available across individual polling stations and define all respective variables to estimate the share of polling stations at which ballot discrepancies are due to systematic manipulation. 
+
+```r
+result <- 
+  est_fraud(eligible = data$eligible_voters, 
+            turnout_main = data$turnout_raceA,
+            turnout_baseline = data$turnout_raceB,
+            winner_main = data$winner_A,
+            uncertainty = c("fundamental", "estimation"),
+            n_iter = 100, 
+            n_postdraws = 1000,
+            n_burnin = 500,
+            seed = 12345
+            )
+```
 Check out the full paper and analysis HERE. 
