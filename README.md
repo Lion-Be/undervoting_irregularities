@@ -20,4 +20,6 @@ Look at these scanned vote tabulation sheets from the Local Elections 2019 in Ec
 ![alt-text-1](acta_prefecto.png "Election of Provincial Representatives") ![alt-text-2](acta_alcalde.png "Election of City Mayor")
 
 ### Across the country
+The plots below visualize the extent of discrepancies for different years across ~40,000 polling stations in the country. Polling stations are sorted on the x-axis. Whenever the gray lines diverge from the green line, there are discrepancies. 
 
+![alt-text-1](undervoting2017.png) ![alt-text-2](undervoting2019.png)
