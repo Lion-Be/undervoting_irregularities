@@ -2,7 +2,8 @@
 est_fraud <- function(eligible, # vector with eligible voters
                       turnout_main, # vector with absolute turnout across entities in main election, n=length(eligible)
                       turnout_baseline, # vector with absolute turnout across entities in baseline election, n=length(eligible)
-                      winner_main, # vector with absolute number of votes for winner in main election
+                      winner_main = NA, # vector with absolute number of votes for winner in main election
+                      winnershare_main = NA, # vector with share of votes for winner in main election
                       uncertainty = c("fundamental", "estimation"), # which types of uncertainty should be incorporated 
                       n_iter = 50,      # number of iterations underlying mean estimation (estimation uncertainty)
                       n_iter2 = 100, # number of times mean is estimated (estimation uncertainty)
@@ -21,7 +22,8 @@ est_fraud <- function(eligible, # vector with eligible voters
   
   turnoutshare_baseline <- turnout_baseline / eligible
   turnoutshare_baseline[turnoutshare_baseline > 1] <- 1
-  winnershare_main <- winner_main / turnout_main
+  if (is.na(winnershare_main))
+    winnershare_main <- winner_main / turnout_main
   winnershare_main[winnershare_main < 0] <- 0
   winnershare_main[winnershare_main > 1] <- 1
   undervoting <- turnout_main - turnout_baseline
@@ -159,7 +161,7 @@ est_fraud <- function(eligible, # vector with eligible voters
     ")
     write(x=model_winnershare_probs, file="model_winnershare_probs.stan", append=FALSE)
     if (length(which(winnershare_main == 0 | winnershare_main ==1)) > 0)
-      winnershare_main <- winnershare_main[which(winnershare_main == 0 | winnershare_main ==1)]
+      winnershare_main <- winnershare_main[-which(winnershare_main == 0 | winnershare_main ==1)]
     winnershare_data <- list(winnershare = winnershare_main, N = length(winnershare_main))
     m_winnershare <- stan(
       file = "model_winnershare_probs.stan",
@@ -217,7 +219,8 @@ est_fraud <- function(eligible, # vector with eligible voters
           dat_sim <- dat_sim[order(dat_sim$winner_share),]
           
           # calculate Euclidean distance between each row in dat_emp and dat_sim, sum up
-          euc_dist_iter[iter] <- sum(diag(fields::rdist(dat_emp, dat_sim)))
+          x <- diag(fields::rdist(dat_emp, dat_sim))[which(!is.nan(diag(fields::rdist(dat_emp, dat_sim))))]
+          euc_dist_iter[iter] <- sum(x)
         } # end for iter
         
         euc_dist[id_share] <- mean(euc_dist_iter[!euc_dist_iter==Inf])
@@ -226,15 +229,16 @@ est_fraud <- function(eligible, # vector with eligible voters
       } # end for share
     
       # identify fraud parameter that minimizes distance metric
-      euc_estimate_postdraw[post_draw] <- seq(0, 0.99, 0.02)[which.min(euc_dist)]
+      if (length(seq(0, 0.99, 0.02)[which.min(euc_dist)]) > 0)
+        euc_estimate_postdraw[post_draw] <- seq(0, 0.99, 0.02)[which.min(euc_dist)]
       if (is.element("fundamental", uncertainty)) 
         print(str_c("Simulations finished for ", post_draw, " out of ", n_postdraws, " posterior samples."))
       
     } # end for post_draw
     
-    out <- c(mean(euc_estimate_postdraw), 
-             quantile(sort(euc_estimate_postdraw), 0.025),
-             quantile(sort(euc_estimate_postdraw), 0.975)
+    out <- c(mean(euc_estimate_postdraw, na.rm = T), 
+             quantile(sort(euc_estimate_postdraw), 0.025, na.rm = T),
+             quantile(sort(euc_estimate_postdraw), 0.975, na.rm = T)
              )
    
     return(out)

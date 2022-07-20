@@ -287,13 +287,7 @@ load("U:/PhD Electoral Fraud/Papers/02_Detecting Unbalanced Fraud Approaches Fro
   
   
   
-  # histograms of winner's vote share if undervoting is present vs. not
-  hist(actas17$pw_pres[actas17$under_pres_consulta==0], breaks=100, 
-       main="", xlab="Moreno Vote Share", ylab="Frequency")
-  abline(v=mean(actas17$pw_pres[actas17$under_pres_consulta==0], na.rm = T))
-  hist(actas17$pw_pres[actas17$under_pres_consulta>0], breaks=100, col="red", add=T)
-  abline(v=mean(actas17$pw_pres[actas17$under_pres_consulta>0], na.rm = T), col="red")
-  
+
   
   
   

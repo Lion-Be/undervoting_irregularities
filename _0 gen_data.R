@@ -5,9 +5,7 @@ gen_data <- function(entities,          # vector with eligible voters
                      undervoting_n,     # n of entities with undervoting
                      undervoting_sd,    # sd of undervoting distribution 
                      share_fraud,       # share of polling stations with undervoting at which probabilistic fraud is happening
-                     theta_fraud = 0.8, # theta parameter for constructing favor_winner
-                     under = NA,        # vector of undervoting discrepancies
-                     ids = NA           # vector of ids with undervoting discrepancies
+                     theta_fraud = 0.8  # theta parameter for constructing favor_winner
                      ) {
   
   # model absolute baseline turnout and absolute votes for winner
@@ -17,12 +15,11 @@ gen_data <- function(entities,          # vector with eligible voters
   winner_share <- winner/turnout_b
   
   # model undervoting discrepancies
-  if (is.na(under)[1]) {
-    under <- rnorm(undervoting_n, 0, undervoting_sd) #### does my modeled undervoting look like empirical undervoting?????
-    under[under>-1 & under < 0] <- -1
-    under[under<1 & under > 0] <- 1
-    under <- as.integer(under)
-  }
+  under <- rnorm(undervoting_n, 0, undervoting_sd) #### does my modeled undervoting look like empirical undervoting?????
+  under[under>-1 & under < 0] <- -1
+  under[under<1 & under > 0] <- 1
+  under <- as.integer(under)
+ 
   
   # favor_winner <- rbinom(undervoting_n, abs(under), winner_share[ids] + fraud_para) 
   ##### so: I first have undervoting_n polling stations with undervoting
@@ -36,8 +33,7 @@ gen_data <- function(entities,          # vector with eligible voters
   ##### at all polling stations with undervoting. 
  
   # sample clean and frauded polling stations among those with undervoting discrepancies
-  if(is.na(ids)[1]) 
-    ids <- sample(1:length(entities), undervoting_n)
+  ids <- sample(1:length(entities), undervoting_n)
   ids_fraud <- sample(ids, undervoting_n * share_fraud)
   ids_clean <- ids[-which(is.element(ids, ids_fraud))]
   if (share_fraud == 0) ids_clean <- ids               
@@ -80,17 +76,22 @@ gen_data <- function(entities,          # vector with eligible voters
   others[ids_remove] <- others[ids_remove] - others_votes[under[(length(ids_fraud)+1):length(under)] < 0] 
   
   # redefine variables
+  winner[which(winner<0)] <- 0
+  others[which(others<0)] <- 0
+  
   turnout_a <- winner + others
   turnout_a_share <- turnout_a / entities
   turnout_b_share <- turnout_b / entities
   under_perc <- abs((turnout_a - turnout_b) / turnout_a)
   winner_share <- winner / turnout_a
   others_share <- others / turnout_a
+  frauded_id <- rep(0, length(entities))
+  frauded_id[ids_fraud] <- 1
   
   # construct data 
   under <- turnout_a - turnout_b
   df <- as.data.frame(cbind(entities, turnout_a, turnout_b, under, under_perc, turnout_a_share, turnout_b_share, 
-                      winner, others, winner_share, others_share))
+                      winner, others, winner_share, others_share, frauded_id))
   return(df)
   
 }
