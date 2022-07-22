@@ -831,9 +831,11 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
   
   
   
-#' ---------------------------------------------------
-# 7. urban/rural divide in irregularities ------------
-#' ---------------------------------------------------
+#' ------------------------------------------------------
+# 7. geographical patterns in irregularities ------------
+# urban/rural divide
+# size of parroquia
+#' ------------------------------------------------------
 
   actas17$under_pres_consulta <- actas17$SUFRAGANTES_pres - actas17$SUFRAGANTES_consulta 
   actas17$under_pres_asam_prov <- actas17$SUFRAGANTES_pres - actas17$SUFRAGANTES_asam_prov
@@ -849,9 +851,9 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
   ## for urban/rural based on one race
   
   
-  #' -----------------------------------------------------
-  # 7.1 scatterplots
-  #' -----------------------------------------------------
+  #' -----------------------
+  # 7.1 scatterplots -------
+  #' -----------------------
   
     library(ggpubr)
     library(ggplot2)
@@ -892,7 +894,8 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
       annotate(geom="text", x=170, y=43, label="No undervoting irregularities", col="darkgrey") + 
       annotate(geom="text", x=185, y=25, label="Undervoting, 10% of eligible voters", col="darkgrey") + 
       geom_rug() + 
-      theme_pubr() +
+      # theme_pubr() +
+      theme_minimal() +
       theme(legend.position = "none")
       
     
@@ -958,44 +961,207 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
     # heat maps? visualizing bivariate distributions with ellipses?
     
     
-  #' -----------------------------------------------------
-  # 7.2 histograms
-  #' -----------------------------------------------------
-    actas17_histo1 <- actas17[,c("PARROQUIA_ESTADO_pres", "under_pres_asam_prov", "under_nac_prov", "under_andino_prov", "under_consulta_prov")]
-    actas17_histo1 <- actas17_histo1 %>% 
+  #' ---------------------
+  # 7.2 histograms -------
+  #' ---------------------
+    
+    actas17_histos <- actas17[,c("PARROQUIA_ESTADO_pres", "under_pres_asam_prov", "under_nac_prov", "under_andino_prov", "under_consulta_prov")]
+    
+    # presidential election vs. provincial parliament
+    actas17_histo1 <- actas17_histos %>% 
       filter(PARROQUIA_ESTADO_pres == "URBANA" | PARROQUIA_ESTADO_pres == "RURAL", 
              under_pres_asam_prov != 0)
     
-    # urban
-    par(xpd=F)
-    hist(actas17_urban$under_pres_asam_prov[which(actas17_urban$under_pres_asam_prov!=0)], 
-         breaks=200, col=gray.colors(n=4)[1], xlab="", main="", xlim=c(-100,100))
-    hist(actas17_urban$under_nac_prov[which(actas17_urban$under_nac_prov!=0)], 
-         breaks=200, col=gray.colors(n=4)[2], xlim=c(-100,100), add=T)
-    hist(actas17_urban$under_andino_prov[which(actas17_urban$under_andino_prov!=0)], 
-         breaks=200, col=gray.colors(n=4)[3], xlim=c(-100,100), add=T)
-    hist(actas17_urban$under_consulta_prov[which(actas17_urban$under_consulta_prov!=0)], 
-         breaks=200, col=gray.colors(n=4)[4], xlim=c(-100,100), add=T)
+    plot5 <- ggplot(actas17_histo1, aes(x = under_pres_asam_prov, fill = PARROQUIA_ESTADO_pres, color = PARROQUIA_ESTADO_pres)) +                       # Draw overlaying histogram
+      geom_histogram(alpha = 0.4, bins = 100) +
+      scale_fill_discrete(name = "Location", labels = c("Rural", "Urban")) +
+      scale_x_continuous(name = "Number of Discrepant Ballots", limits = c(-150,150)) + 
+      scale_y_continuous(name = "Frequency") + 
+      xlab("Discrepant Number of Ballots") + 
+      geom_vline(xintercept = 0, lwd=1.5, lty = 2, col = "darkgrey") + 
+      geom_vline(xintercept = 35, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_vline(xintercept = -35, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_curve(
+        aes(x = 50, y = 95, xend = 2, yend = 95),
+        arrow = arrow(length = unit(0.03, "npc")), 
+        col = "darkgrey",
+        angle = 0, 
+        curvature = -0.5
+      ) +
+      geom_curve(
+        aes(x = 50, y = 75, xend = 37, yend = 75),
+        arrow = arrow(length = unit(0.03, "npc")), 
+        col = "darkgrey",
+        angle = 0, 
+        curvature = -0.5
+      ) +
+      annotate(geom="text", x=105, y=95, label="No undervoting irregularities", col="darkgrey") + 
+      annotate(geom="text", x=75, y=75, label="Undervoting,", col="darkgrey") + 
+      annotate(geom="text", x=91, y=60, label="10% of eligible voters", col="darkgrey") + 
+      geom_rug() +
+      #theme_pubr() +
+      theme_minimal() +
+      theme(legend.position = "none")
     
-    # rural
-    hist(actas17_rural$under_pres_asam_prov[which(actas17_rural$under_pres_asam_prov!=0)], 
-         breaks=200, col="hotpink", xlim=c(-100,100), add=T)
-    hist(actas17_rural$under_nac_prov[which(actas17_rural$under_nac_prov!=0)], 
-         breaks=200, col="violetred", xlim=c(-100,100), add=T)
-    hist(actas17_rural$under_andino_prov[which(actas17_rural$under_andino_prov!=0)], 
-         breaks=200, col="purple1", xlim=c(-100,100), add=T)
-    hist(actas17_rural$under_consulta_prov[which(actas17_rural$under_consulta_prov!=0)], 
-         breaks=200, col="red3", xlim=c(-100,100), add=T)
     
-    ### add means to left
-    ### add legend to right
+    # national parliament vs. provincial parliament
+    actas17_histo2 <- actas17_histos %>% 
+      filter(PARROQUIA_ESTADO_pres == "URBANA" | PARROQUIA_ESTADO_pres == "RURAL", 
+             under_nac_prov != 0)
+    
+    plot6 <- ggplot(actas17_histo2, aes(x = under_nac_prov, fill = PARROQUIA_ESTADO_pres, color = PARROQUIA_ESTADO_pres)) +                       # Draw overlaying histogram
+      geom_histogram(alpha = 0.4, bins = 100) +
+      scale_fill_discrete(name = "Location", labels = c("Rural", "Urban")) +
+      scale_x_continuous(name = "Number of Discrepant Ballots", limits = c(-150,150)) + 
+      scale_y_continuous(name = "Frequency") + 
+      xlab("Discrepant Number of Ballots") + 
+      geom_vline(xintercept = 0, lwd=1.5, lty = 2, col = "darkgrey") + 
+      geom_vline(xintercept = 35, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_vline(xintercept = -35, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_curve(
+        aes(x = 50, y = 95, xend = 2, yend = 95),
+        arrow = arrow(length = unit(0.03, "npc")), 
+        col = "darkgrey",
+        angle = 0, 
+        curvature = -0.5
+      ) +
+      geom_curve(
+        aes(x = 50, y = 75, xend = 37, yend = 75),
+        arrow = arrow(length = unit(0.03, "npc")), 
+        col = "darkgrey",
+        angle = 0, 
+        curvature = -0.5
+      ) +
+      annotate(geom="text", x=105, y=95, label="No undervoting irregularities", col="darkgrey") + 
+      annotate(geom="text", x=75, y=75, label="Undervoting,", col="darkgrey") + 
+      annotate(geom="text", x=91, y=60, label="10% of eligible voters", col="darkgrey") + 
+      geom_rug() +
+      #theme_pubr() +
+      theme_minimal() +
+      theme(legend.position = "none")
+    
+   
+    # Andean parliament vs. provincial parliament
+    actas17_histo3 <- actas17_histos %>% 
+      filter(PARROQUIA_ESTADO_pres == "URBANA" | PARROQUIA_ESTADO_pres == "RURAL", 
+             under_andino_prov != 0)
+    
+    plot7 <- ggplot(actas17_histo3, aes(x = under_nac_prov, fill = PARROQUIA_ESTADO_pres, color = PARROQUIA_ESTADO_pres)) +                       # Draw overlaying histogram
+      geom_histogram(alpha = 0.4, bins = 100) +
+      scale_fill_discrete(name = "Location", labels = c("Rural", "Urban")) +
+      scale_x_continuous(name = "Number of Discrepant Ballots", limits = c(-150,150)) + 
+      scale_y_continuous(name = "Frequency") + 
+      xlab("Discrepant Number of Ballots") + 
+      geom_vline(xintercept = 0, lwd=1.5, lty = 2, col = "darkgrey") + 
+      geom_vline(xintercept = 35, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_vline(xintercept = -35, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_curve(
+        aes(x = 50, y = 95, xend = 2, yend = 95),
+        arrow = arrow(length = unit(0.03, "npc")), 
+        col = "darkgrey",
+        angle = 0, 
+        curvature = -0.5
+      ) +
+      geom_curve(
+        aes(x = 50, y = 75, xend = 37, yend = 75),
+        arrow = arrow(length = unit(0.03, "npc")), 
+        col = "darkgrey",
+        angle = 0, 
+        curvature = -0.5
+      ) +
+      annotate(geom="text", x=105, y=95, label="No undervoting irregularities", col="darkgrey") + 
+      annotate(geom="text", x=75, y=75, label="Undervoting,", col="darkgrey") + 
+      annotate(geom="text", x=91, y=60, label="10% of eligible voters", col="darkgrey") + 
+      geom_rug() +
+      #theme_pubr() +
+      theme_minimal() +
+      theme(legend.position = "none") 
+   
+    
+    # National referendum vs. provincial parliament
+    actas17_histo4 <- actas17_histos %>% 
+      filter(PARROQUIA_ESTADO_pres == "URBANA" | PARROQUIA_ESTADO_pres == "RURAL", 
+             under_consulta_prov != 0)
+    
+    plot8 <- ggplot(actas17_histo4, aes(x = under_consulta_prov, fill = PARROQUIA_ESTADO_pres, color = PARROQUIA_ESTADO_pres)) +                       # Draw overlaying histogram
+      geom_histogram(alpha = 0.4, bins = 100) +
+      scale_fill_discrete(name = "Location", labels = c("Rural", "Urban")) +
+      scale_x_continuous(name = "Number of Discrepant Ballots", limits = c(-150,150)) + 
+      scale_y_continuous(name = "Frequency") + 
+      xlab("Discrepant Number of Ballots") + 
+      geom_vline(xintercept = 0, lwd=1.5, lty = 2, col = "darkgrey") + 
+      geom_vline(xintercept = 35, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_vline(xintercept = -35, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_curve(
+        aes(x = 50, y = 95, xend = 2, yend = 95),
+        arrow = arrow(length = unit(0.03, "npc")), 
+        col = "darkgrey",
+        angle = 0, 
+        curvature = -0.5
+      ) +
+      geom_curve(
+        aes(x = 50, y = 75, xend = 37, yend = 75),
+        arrow = arrow(length = unit(0.03, "npc")), 
+        col = "darkgrey",
+        angle = 0, 
+        curvature = -0.5
+      ) +
+      annotate(geom="text", x=105, y=95, label="No undervoting irregularities", col="darkgrey") + 
+      annotate(geom="text", x=75, y=75, label="Undervoting,", col="darkgrey") + 
+      annotate(geom="text", x=91, y=60, label="10% of eligible voters", col="darkgrey") + 
+      geom_rug() +
+      #theme_pubr() +
+      theme_minimal() +
+      theme(legend.position = "none") 
+    
+    
+    #' ---------------------------------
+    # 7.3 descriptive statistics -------
+    #' ---------------------------------
+    
+    library(stargazer)
+    actas17_histosURBAN <- actas17_histos[actas17_histos$PARROQUIA_ESTADO_pres == "URBANA",]
+    actas17_histosRURAL <- actas17_histos[actas17_histos$PARROQUIA_ESTADO_pres == "RURAL",]
+    stargazer(actas17_histosURBAN, type="text")    
+    stargazer(actas17_histosRURAL, type="text") # given range (min/max), differences are negligible
+    
+    
+    #' -----------------------------
+    # 7.4 size of parroquia -------
+    #' -----------------------------
+    
+    # just using number of eligible voters per parroquia
+    actas17_size <- actas17[,c("PARROQUIA_NOMBRE_pres", "PARROQUIA_ESTADO_pres", "ELECTORES_REGISTRO_pres", 
+                               "under_pres_asam_prov", "under_nac_prov", "under_andino_prov", "under_consulta_prov")]
+    
+    actas17_size <- actas17_size %>% 
+      group_by(PARROQUIA_NOMBRE_pres) %>% 
+      summarize(electores = sum(ELECTORES_REGISTRO_pres), 
+                under_pres_asam_prov = sum(abs(under_pres_asam_prov)),
+                under_nac_prov = sum(abs(under_nac_prov)),
+                under_andino_prov = sum(abs(under_andino_prov)),
+                under_consulta_prov = sum(abs(under_consulta_prov)),
+                )
+    
+    actas17_size_pres <- actas17_size %>% 
+      filter(under_pres_asam_prov != 0, 
+             electores < 200000)
+    plot9 <- ggplot(actas17_size_pres, aes(x = electores, y = under_pres_asam_prov)) + 
+      geom_point(size = 3, alpha=0.4) + 
+      geom_smooth(method='lm', formula= y~x) + 
+      geom_smooth(method='loess', formula= y~x) + 
+      geom_rug() + 
+      theme_minimal() +
+      theme(legend.position = "none")
     
     
     
-    
-    
-    
-    
+    # merge with population density data from INEC
+    library(readxl)
+    ecu_dens <- read_excel("densidad_parroquia.xlsx", skip=8)
+    actas17_dens <- actas17[,c("PARROQUIA_NOMBRE_pres", "PARROQUIA_ESTADO_pres", "under_pres_asam_prov", "under_nac_prov", "under_andino_prov", "under_consulta_prov")]
+    colnames(actas17_dens)[1] <- "Nombre de parroquia"
+    under_dens <- merge(actas17_dens, ecu_dens, by="Nombre de parroquia")
     
     
     
