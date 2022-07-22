@@ -853,45 +853,118 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
   # 7.1 scatterplots
   #' -----------------------------------------------------
   
+    library(ggpubr)
+    library(ggplot2)
+    library(dplyr)
+    library(patchwork)
+  
     actas17_urban <- actas17[actas17$PARROQUIA_ESTADO_pres=="URBANA",]
     actas17_rural <- actas17[actas17$PARROQUIA_ESTADO_pres=="RURAL",]
   
-    par(mfrow=c(1,1))
-    plot(actas17_urban$SUFRAGANTES_pres[which(actas17_urban$under_pres_asam_prov!=0)], 
-         actas17_urban$SUFRAGANTES_asam_prov[which(actas17_urban$under_pres_asam_prov!=0)], 
-         pch=0, col=gray.colors(n=4)[1], xlab="", ylab="") 
-    points(actas17_urban$SUFRAGANTES_asam_nac[which(actas17_urban$under_nac_prov!=0)], 
-         actas17_urban$SUFRAGANTES_asam_prov[which(actas17_urban$under_nac_prov!=0)], 
-         pch=1, col=gray.colors(n=4)[2]) 
-    points(actas17_urban$SUFRAGANTES_andino[which(actas17_urban$under_andino_prov!=0)], 
-           actas17_urban$SUFRAGANTES_asam_prov[which(actas17_urban$under_andino_prov!=0)], 
-           pch=2, col=gray.colors(n=4)[3]) 
-    points(actas17_urban$SUFRAGANTES_consulta[which(actas17_urban$under_consulta_prov!=0)], 
-           actas17_urban$SUFRAGANTES_asam_prov[which(actas17_urban$under_consulta_prov!=0)], 
-           pch=3, col=gray.colors(n=4)[3]) 
-  
-    points(actas17_rural$SUFRAGANTES_pres[which(actas17_rural$under_pres_asam_prov!=0)], 
-           actas17_rural$SUFRAGANTES_asam_prov[which(actas17_rural$under_pres_asam_prov!=0)], 
-         pch=0, col="hotpink") 
-    points(actas17_rural$SUFRAGANTES_asam_nac[which(actas17_rural$under_nac_prov!=0)], 
-           actas17_rural$SUFRAGANTES_asam_prov[which(actas17_rural$under_nac_prov!=0)], 
-           pch=1, col="violetred") 
-    points(actas17_rural$SUFRAGANTES_andino[which(actas17_rural$under_andino_prov!=0)], 
-           actas17_rural$SUFRAGANTES_asam_prov[which(actas17_rural$under_andino_prov!=0)], 
-           pch=2, col="purple1") 
-    points(actas17_rural$SUFRAGANTES_consulta[which(actas17_rural$under_consulta_prov!=0)], 
-           actas17_rural$SUFRAGANTES_asam_prov[which(actas17_rural$under_consulta_prov!=0)], 
-           pch=3, col="red3") 
+    # presidential election vs. provincial parliament
+    actas17_plot1 <- actas17[,c("SUFRAGANTES_asam_prov", "SUFRAGANTES_pres", "PARROQUIA_ESTADO_pres", "under_pres_asam_prov")]
+    actas17_plot1 <- actas17_plot1 %>% 
+      filter(PARROQUIA_ESTADO_pres == "URBANA" | PARROQUIA_ESTADO_pres == "RURAL", 
+             under_pres_asam_prov != 0)
     
+    plot1 <- ggplot(actas17_plot1, aes(x = SUFRAGANTES_asam_prov, y = SUFRAGANTES_pres, color = PARROQUIA_ESTADO_pres)) + 
+      geom_point(aes(color = PARROQUIA_ESTADO_pres), size = 3, alpha=0.4) + 
+      scale_color_discrete(name = "Location", labels = c("Rural", "Urban")) + 
+      scale_y_continuous(name = "N ballots, presidential election", limits = c(0,350)) + 
+      scale_x_continuous(name = "N ballots, regional parliament", limits = c(0,350)) + 
+      geom_abline(intercept = 0, slope = 1, lwd=1.5, lty = 2, col = "darkgrey") + 
+      geom_abline(intercept = 35, slope = 1, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_abline(intercept = -35, slope = 1, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_curve(
+        aes(x = 100, y = 43, xend = 50, yend = 43),
+        arrow = arrow(length = unit(0.03, "npc")), 
+        col = "darkgrey",
+        angle = 0, 
+        curvature = -0.5
+      ) +
+      geom_curve(
+        aes(x = 100, y = 25, xend = 65, yend = 25),
+        arrow = arrow(length = unit(0.03, "npc")), 
+        col = "darkgrey",
+        angle = 0, 
+        curvature = -0.5
+      ) +
+      annotate(geom="text", x=170, y=43, label="No undervoting irregularities", col="darkgrey") + 
+      annotate(geom="text", x=185, y=25, label="Undervoting, 10% of eligible voters", col="darkgrey") + 
+      geom_rug() + 
+      theme_pubr() +
+      theme(legend.position = "none")
+      
+    
+    # national parliament vs. provincial parliament
+    actas17_plot2 <- actas17[,c("SUFRAGANTES_asam_prov", "SUFRAGANTES_asam_nac", "PARROQUIA_ESTADO_pres", "under_nac_prov")]
+    actas17_plot2 <- actas17_plot2 %>% 
+      filter(PARROQUIA_ESTADO_pres == "URBANA" | PARROQUIA_ESTADO_pres == "RURAL", 
+             under_nac_prov != 0)
+    
+    plot2 <- ggplot(actas17_plot2, aes(x = SUFRAGANTES_asam_prov, y = SUFRAGANTES_asam_nac, color = PARROQUIA_ESTADO_pres)) + 
+      geom_point(aes(color = PARROQUIA_ESTADO_pres), size = 3, alpha=0.4) + 
+      scale_color_discrete(name = "Location", labels = c("Rural", "Urban")) + 
+      scale_y_continuous(name = "N ballots, national parliament", limits = c(0,350)) + 
+      scale_x_continuous(name = "N ballots, regional parliament", limits = c(0,350)) +
+      geom_abline(intercept = 0, slope = 1, lwd=1.5, lty = 2, col = "darkgrey") + 
+      geom_abline(intercept = 35, slope = 1, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_abline(intercept = -35, slope = 1, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_rug() + 
+      theme_pubr() +
+      theme(legend.position = "none")
+    
+    
+    # Andean parliament vs. provincial parliament
+    actas17_plot3 <- actas17[,c("SUFRAGANTES_asam_prov", "SUFRAGANTES_andino", "PARROQUIA_ESTADO_pres", "under_andino_prov")]
+    actas17_plot3 <- actas17_plot3 %>% 
+      filter(PARROQUIA_ESTADO_pres == "URBANA" | PARROQUIA_ESTADO_pres == "RURAL", 
+             under_andino_prov != 0)
+    
+    plot3 <- ggplot(actas17_plot3, aes(x = SUFRAGANTES_asam_prov, y = SUFRAGANTES_andino, color = PARROQUIA_ESTADO_pres)) + 
+      geom_point(aes(color = PARROQUIA_ESTADO_pres), size = 3, alpha=0.4) + 
+      scale_color_discrete(name = "Location", labels = c("Rural", "Urban")) + 
+      scale_y_continuous(name = "N ballots, Andean parliament", limits = c(0,350)) + 
+      scale_x_continuous(name = "N ballots, regional parliament", limits = c(0,350)) + 
+      geom_abline(intercept = 0, slope = 1, lwd=1.5, lty = 2, col = "darkgrey") + 
+      geom_abline(intercept = 35, slope = 1, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_abline(intercept = -35, slope = 1, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_rug() + 
+      theme_pubr() +
+      theme(legend.position = "none")
+    
+    
+    # National referendum vs. provincial parliament
+    actas17_plot4 <- actas17[,c("SUFRAGANTES_asam_prov", "SUFRAGANTES_consulta", "PARROQUIA_ESTADO_pres", "under_consulta_prov")]
+    actas17_plot4 <- actas17_plot4 %>% 
+      filter(PARROQUIA_ESTADO_pres == "URBANA" | PARROQUIA_ESTADO_pres == "RURAL", 
+             under_consulta_prov != 0)
+    
+    plot4 <- ggplot(actas17_plot4, aes(x = SUFRAGANTES_asam_prov, y = SUFRAGANTES_consulta, color = PARROQUIA_ESTADO_pres)) + 
+      geom_point(aes(color = PARROQUIA_ESTADO_pres), size = 3, alpha=0.4) + 
+      scale_color_discrete(name = "Location", labels = c("Rural", "Urban")) + 
+      scale_y_continuous(name = "N ballots, national referendum", limits = c(0,350)) + 
+      scale_x_continuous(name = "N ballots, regional parliament", limits = c(0,350)) + 
+      geom_abline(intercept = 0, slope = 1, lwd=1.5, lty = 2, col = "darkgrey") + 
+      geom_abline(intercept = 35, slope = 1, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_abline(intercept = -35, slope = 1, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_rug() + 
+      theme_pubr() +
+      theme(legend.position = "none")
+    
+    grid.arrange(plot1, plot2, plot3, plot4)
   
-    # if any, more irregularities in urban places
-    # kind of an unfair comparison because there are 3x as many urban than rural datapoints
+    
     # heat maps? visualizing bivariate distributions with ellipses?
     
     
   #' -----------------------------------------------------
   # 7.2 histograms
   #' -----------------------------------------------------
+    actas17_histo1 <- actas17[,c("PARROQUIA_ESTADO_pres", "under_pres_asam_prov", "under_nac_prov", "under_andino_prov", "under_consulta_prov")]
+    actas17_histo1 <- actas17_histo1 %>% 
+      filter(PARROQUIA_ESTADO_pres == "URBANA" | PARROQUIA_ESTADO_pres == "RURAL", 
+             under_pres_asam_prov != 0)
     
     # urban
     par(xpd=F)
