@@ -35,7 +35,7 @@ The unsupervised machine learning method that I built takes fine-graded election
 
 :white_check_mark: **Property 2:** In expectation, there is no statistical association between the extent of undervoting irregularities and the winning candidate’s vote share across polling stations.
 
-$N_i$ is the number of eligible voters across $i=1,...,n$ polling stations. $T_i \in \[0,N_i\]$ denotes the absolute number of turned out voters for a particular electoral race of interest. The share of votes the winning candidate (party) received is denoted by $p_i \in [0,1]$. Across all polling stations, observed turnout levels $T_i$ and winner’s vote shares $p_i$ can be decomposed a
+$N_i$ is the number of eligible voters across $i=1,...,n$ polling stations. $T_i \in \[0,N_i\]$ denotes the absolute number of turned out voters for a particular electoral race of interest. The share of votes the winning candidate (party) received is denoted by $p_i \in [0,1]$. Across all polling stations, observed turnout levels $T_i$ and winner’s vote shares $p_i$ can be decomposed as
 
 <img src="eq0.png" width="300">
 
