@@ -21,7 +21,7 @@ Look at these scanned vote tabulation sheets from the Local Elections 2019 in Ec
 </p>
 
 ### Across the country
-The plots below visualize the extent of these discrepancies for different years across ~40,000 polling stations in the country. Polling stations are sorted on the x-axis. Whenever the gray lines diverge from the green line (baseline election of members for regional parliaments), there are discrepancies. Conclusion: In the country of Ecuador, there are *many* of these discrepancies. It is an open question whether these are due to human errors or challenges in the administration of elections or due to systematic manipulation. 
+The plots below visualize the extent of these discrepancies for different years across ~40,000 polling stations in the country. Polling stations are sorted on the x-axis. Whenever the gray lines diverge from the green line (baseline election of members for regional parliaments), there are discrepancies. Conclusion: In the country of Ecuador, there are *many* of these discrepancies. It is an open question whether these are due to human errors and challenges in the administration of elections or due to systematic manipulation. 
 
 <p float="left">
   <img src="undervoting_2017.png" width="330" />
