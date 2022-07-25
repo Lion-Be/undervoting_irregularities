@@ -47,7 +47,7 @@ A second scenario without fraud is given by ballots not getting accounted for, l
 
 <img src="eq01.png" width="300">
 
-$\epsilon^j_i$ is denoted as the share of votes for the winner among all lost (or miscounted votes) at a particular polling station, which varies across $J$ hypothetical realizations. In clean elections, not accounted, miscounted or lost votes constitute a truly random sample of the true votes and hence $\mu_i=0$, $E[\xi_i]=0$ and $E[\epsilon_i]=\frac{V_i^*}{T_i^*}$. This means that the expected portion of votes that were cast for the winner among all lost or miscounted votes is equal to the portion of votes cast for the winner among all votes that were originally cast. We can now straightforwardly derive that at each polling station, the miscount or loss of votes---in expectation---affects all candidates proportionally to their electoral strength in clean elections as
+$\epsilon^j_i$ is denoted as the share of votes for the winner among all lost (or miscounted votes) at a particular polling station, which varies across $J$ hypothetical realizations. In clean elections, not accounted, miscounted or lost votes constitute a truly random sample of the true votes and hence $\mu_i=0$, $E[\xi_i]=0$ and $E[\epsilon_i]=\frac{V_i^\*}{T_i^*}$. This means that the expected portion of votes that were cast for the winner among all lost or miscounted votes is equal to the portion of votes cast for the winner among all votes that were originally cast. We can now straightforwardly derive that at each polling station, the miscount or loss of votes---in expectation---affects all candidates proportionally to their electoral strength in clean elections as
 
 <img src="eq1.png" width="300">
 
