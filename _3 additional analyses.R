@@ -17,6 +17,13 @@ library(grid)
 load("U:/PhD Electoral Fraud/Papers/02_Detecting Unbalanced Fraud Approaches From Undervoting Irregularities/undervoting_irregularities/actas17.Rdata")
 actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete polling stations with <100 eligible voters
 
+load("U:/PhD Electoral Fraud/Papers/02_Detecting Unbalanced Fraud Approaches From Undervoting Irregularities/undervoting_irregularities/actas19.Rdata")
+actas19_alcal_conc_rural <- actas19_alcal_conc_rural[-which(actas19_alcal_conc_rural$ELECTORES_REGISTRO_alcal<100),] # delete polling stations with <100 eligible voters
+actas19_alcal_conc_urban <- actas19_alcal_conc_urban[-which(actas19_alcal_conc_urban$ELECTORES_REGISTRO_alcal<100),] # delete polling stations with <100 eligible voters
+actas19_alcal_pref <- actas19_alcal_pref[-which(actas19_alcal_pref$ELECTORES_REGISTRO_alcal<100),] # delete polling stations with <100 eligible voters
+actas19_alcal_vocales <- actas19_alcal_vocales[-which(actas19_alcal_vocales$ELECTORES_REGISTRO_alcal<100),] # delete polling stations with <100 eligible voters
+
+
 
 #' -------------------------------
 # 0. data preparation ------------
@@ -382,6 +389,161 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
     text(2.4, 1.05, labels="National Referendum", cex=1.2, font=2)
     
     rect(5.5, 0, 10.5, 1, density = 50, angle = 45,
+         col = "lightgrey", border=NA)
+    
+    
+#' ----------------------------
+# 3. boxplots 2019 ------------
+#' ----------------------------  
+    
+    par(mfrow=c(2,2))
+    
+    
+    ### provincial prefects vs. city mayors
+    # categorize level of undervoting
+    actas19_alcal_pref$underperc <- abs(actas19_alcal_pref$SUFRAGANTES_alcal - actas19_alcal_pref$SUFRAGANTES_pref) / actas19_alcal_pref$SUFRAGANTES_alcal
+    actas19_alcal_pref$ucat <- NA
+    actas19_alcal_pref$ucat[actas19_alcal_pref$underperc>0.9] <- NA
+    actas19_alcal_pref$ucat[actas19_alcal_pref$underperc<0.9] <- 10
+    actas19_alcal_pref$ucat[actas19_alcal_pref$underperc<0.8] <- 9
+    actas19_alcal_pref$ucat[actas19_alcal_pref$underperc<0.7] <- 8
+    actas19_alcal_pref$ucat[actas19_alcal_pref$underperc<0.6] <- 7
+    actas19_alcal_pref$ucat[actas19_alcal_pref$underperc<0.5] <- 6
+    actas19_alcal_pref$ucat[actas19_alcal_pref$underperc<0.4] <- 5
+    actas19_alcal_pref$ucat[actas19_alcal_pref$underperc<0.3] <- 4
+    actas19_alcal_pref$ucat[actas19_alcal_pref$underperc<0.2] <- 3
+    actas19_alcal_pref$ucat[actas19_alcal_pref$underperc<0.1] <- 2
+    actas19_alcal_pref$ucat[actas19_alcal_pref$underperc==0] <- 1
+    
+    # construct winners' vote shares
+    x <- actas19_alcal_pref[,which(str_detect(colnames(actas19_alcal_pref), "pref"))]
+    x <- x[,25:ncol(x)]
+    x <- x[,sapply(x, is.numeric)]
+    winner_votes <- apply(x, MARGIN = 1, FUN=max, na.rm=T)
+    actas19_alcal_pref$pw <- winner_votes / actas19_alcal_pref$SUFRAGANTES_pref
+    
+    par(mar = c(2, 4.5, 4.5, 1))
+    
+    boxplot(actas19_alcal_pref$pw ~ actas19_alcal_pref$ucat, xaxt="n",
+            xlab="Share of Discrepant Votes Among All Votes", ylab="Winner's Vote Share", 
+            main="", frame.plot = FALSE, ylim=c(0,1), cex.lab=1.2)      
+    abline(h=mean(actas19_alcal_pref$pw[which(actas19_alcal_pref$underperc!=0)], na.rm=T), lty=2, lwd=3, xpd=F, col="lightblue")
+    par(xpd=T)
+    text(2.3, 1.05, labels="Provincial Prefects", cex=1.2, font=2)
+    
+    rect(7.5, 0, 10, 1, density = 50, angle = 45,
+         col = "lightgrey", border=NA)
+    
+    ### urban councilors vs. city mayors
+    # categorize level of undervoting
+    actas19_alcal_conc_urban$underperc <- abs(actas19_alcal_conc_urban$SUFRAGANTES_alcal - actas19_alcal_conc_urban$SUFRAGANTES_conc_urban) / actas19_alcal_conc_urban$SUFRAGANTES_alcal
+    actas19_alcal_conc_urban$ucat <- NA
+    actas19_alcal_conc_urban$ucat[actas19_alcal_conc_urban$underperc>0.9] <- NA
+    actas19_alcal_conc_urban$ucat[actas19_alcal_conc_urban$underperc<0.9] <- 10
+    actas19_alcal_conc_urban$ucat[actas19_alcal_conc_urban$underperc<0.8] <- 9
+    actas19_alcal_conc_urban$ucat[actas19_alcal_conc_urban$underperc<0.7] <- 8
+    actas19_alcal_conc_urban$ucat[actas19_alcal_conc_urban$underperc<0.6] <- 7
+    actas19_alcal_conc_urban$ucat[actas19_alcal_conc_urban$underperc<0.5] <- 6
+    actas19_alcal_conc_urban$ucat[actas19_alcal_conc_urban$underperc<0.4] <- 5
+    actas19_alcal_conc_urban$ucat[actas19_alcal_conc_urban$underperc<0.3] <- 4
+    actas19_alcal_conc_urban$ucat[actas19_alcal_conc_urban$underperc<0.2] <- 3
+    actas19_alcal_conc_urban$ucat[actas19_alcal_conc_urban$underperc<0.1] <- 2
+    actas19_alcal_conc_urban$ucat[actas19_alcal_conc_urban$underperc==0] <- 1
+    
+    # construct winners' vote shares
+    x <- actas19_alcal_conc_urban[,which(str_detect(colnames(actas19_alcal_conc_urban), "conc_urban"))]
+    x <- x[,25:ncol(x)]
+    x <- x[,sapply(x, is.numeric)]
+    winner_votes <- apply(x, MARGIN = 1, FUN=max, na.rm=T)
+    actas19_alcal_conc_urban$pw <- winner_votes / actas19_alcal_conc_urban$SUFRAGANTES_conc_urban
+    
+    par(mar = c(2, 3, 4.5, 0))
+    
+    boxplot(actas19_alcal_conc_urban$pw ~ actas19_alcal_conc_urban$ucat, xaxt="n",
+            xlab="", ylab="Winner's Vote Share", 
+            main="", frame.plot = FALSE, ylim=c(0,1), cex.lab=1.2)      
+    abline(h=mean(actas19_alcal_conc_urban$pw[which(actas19_alcal_conc_urban$underperc!=0)], na.rm=T), lty=2, lwd=3, xpd=F, col="lightblue")
+    par(xpd=T)
+    text(2.3, 1.05, labels="Urban Councilors", cex=1.2, font=2)
+    rect(7.5, 0, 10, 1, density = 50, angle = 45,
+         col = "lightgrey", border=NA)
+    
+    
+    
+    ### rural councilors vs. city mayors
+    # categorize level of undervoting
+    actas19_alcal_conc_rural$underperc <- abs(actas19_alcal_conc_rural$SUFRAGANTES_alcal - actas19_alcal_conc_rural$SUFRAGANTES_conc_rural) / actas19_alcal_conc_rural$SUFRAGANTES_alcal 
+    actas19_alcal_conc_rural$ucat <- NA
+    actas19_alcal_conc_rural$ucat[actas19_alcal_conc_rural$underperc>0.9] <- NA
+    actas19_alcal_conc_rural$ucat[actas19_alcal_conc_rural$underperc<0.9] <- 10
+    actas19_alcal_conc_rural$ucat[actas19_alcal_conc_rural$underperc<0.8] <- 9
+    actas19_alcal_conc_rural$ucat[actas19_alcal_conc_rural$underperc<0.7] <- 8
+    actas19_alcal_conc_rural$ucat[actas19_alcal_conc_rural$underperc<0.6] <- 7
+    actas19_alcal_conc_rural$ucat[actas19_alcal_conc_rural$underperc<0.5] <- 6
+    actas19_alcal_conc_rural$ucat[actas19_alcal_conc_rural$underperc<0.4] <- 5
+    actas19_alcal_conc_rural$ucat[actas19_alcal_conc_rural$underperc<0.3] <- 4
+    actas19_alcal_conc_rural$ucat[actas19_alcal_conc_rural$underperc<0.2] <- 3
+    actas19_alcal_conc_rural$ucat[actas19_alcal_conc_rural$underperc<0.1] <- 2
+    actas19_alcal_conc_rural$ucat[actas19_alcal_conc_rural$underperc==0] <- 1
+    
+    # construct winners' vote shares
+    x <- actas19_alcal_conc_rural[,which(str_detect(colnames(actas19_alcal_conc_rural), "conc_rural"))]
+    x <- x[,25:ncol(x)]
+    x <- x[,sapply(x, is.numeric)]
+    winner_votes <- apply(x, MARGIN = 1, FUN=max, na.rm=T)
+    actas19_alcal_conc_rural$pw <- winner_votes / actas19_alcal_conc_rural$SUFRAGANTES_conc_rural
+    
+    par(mar = c(4.5, 4.5, 2, 0))
+    boxplot(actas19_alcal_conc_rural$pw ~ actas19_alcal_conc_rural$ucat, xaxt="n",
+            xlab="Share of Discrepant Votes Among All Votes", ylab="Winner's Vote Share", 
+            main="", frame.plot = FALSE, ylim=c(0,1), cex.lab=1.2)      
+    abline(h=mean(actas19_alcal_conc_rural$pw[which(actas19_alcal_conc_rural$underperc!=0)], na.rm=T), lty=2, lwd=3, xpd=F, col="lightblue")
+    text(1:6, y=0, srt = 60, adj = 1, xpd = TRUE,
+         labels=c("0%", "0-10%", "10-20%", "20-30%", 
+                  "30-40%", "40-50%"))
+    par(xpd=T)
+    text(2.3, 1.05, labels="Rural Councilors", cex=1.2, font=2)
+    
+    rect(7.5, 0, 10, 1, density = 50, angle = 45,
+         col = "lightgrey", border=NA)
+    
+    
+    ### members of parish boards vs. city mayors
+    # categorize level of undervoting
+    actas19_alcal_vocales$underperc <- abs(actas19_alcal_vocales$SUFRAGANTES_alcal - actas19_alcal_vocales$SUFRAGANTES_vocales) / actas19_alcal_vocales$SUFRAGANTES_alcal
+    actas19_alcal_vocales$ucat <- NA
+    actas19_alcal_vocales$ucat[actas19_alcal_vocales$underperc>0.9] <- NA
+    actas19_alcal_vocales$ucat[actas19_alcal_vocales$underperc<0.9] <- 10
+    actas19_alcal_vocales$ucat[actas19_alcal_vocales$underperc<0.8] <- 9
+    actas19_alcal_vocales$ucat[actas19_alcal_vocales$underperc<0.7] <- 8
+    actas19_alcal_vocales$ucat[actas19_alcal_vocales$underperc<0.6] <- 7
+    actas19_alcal_vocales$ucat[actas19_alcal_vocales$underperc<0.5] <- 6
+    actas19_alcal_vocales$ucat[actas19_alcal_vocales$underperc<0.4] <- 5
+    actas19_alcal_vocales$ucat[actas19_alcal_vocales$underperc<0.3] <- 4
+    actas19_alcal_vocales$ucat[actas19_alcal_vocales$underperc<0.2] <- 3
+    actas19_alcal_vocales$ucat[actas19_alcal_vocales$underperc<0.1] <- 2
+    actas19_alcal_vocales$ucat[actas19_alcal_vocales$underperc==0] <- 1
+    
+    # construct winners' vote shares
+    x <- actas19_alcal_vocales[,which(str_detect(colnames(actas19_alcal_vocales), "vocales"))]
+    x <- x[,25:ncol(x)]
+    x <- x[,sapply(x, is.numeric)]
+    winner_votes <- apply(x, MARGIN = 1, FUN=max, na.rm=T)
+    actas19_alcal_vocales$pw <- winner_votes / actas19_alcal_vocales$SUFRAGANTES_vocales
+    
+    par(mar = c(4.5, 3, 2, 0))
+    boxplot(actas19_alcal_vocales$pw ~ actas19_alcal_vocales$ucat, xaxt="n",
+            xlab="Share of Discrepant Votes Among All Votes", ylab="Winner's Vote Share", 
+            main="", frame.plot = FALSE, ylim=c(0,1), cex.lab=1.2)      
+    abline(h=mean(actas19_alcal_vocales$pw[which(actas19_alcal_vocales$underperc!=0)], na.rm=T), lty=2, lwd=3, xpd=F, col="lightblue")
+    par(xpd=T)
+    text(1:6, y=0, srt = 60, adj = 1, xpd = TRUE,
+         labels=c("0%", "0-10%", "10-20%", "20-30%", 
+                  "30-40%", "40-50%"))
+    
+    text(2.3, 1.05, labels="Members of Parish Boards", cex=1.2, font=2)
+    
+    rect(7.5, 0, 10, 1, density = 50, angle = 45,
          col = "lightgrey", border=NA)
     
     
@@ -891,12 +1053,15 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
         angle = 0, 
         curvature = -0.5
       ) +
-      annotate(geom="text", x=170, y=43, label="No undervoting irregularities", col="darkgrey") + 
-      annotate(geom="text", x=185, y=25, label="Undervoting, 10% of eligible voters", col="darkgrey") + 
+      annotate(geom="text", x=197, y=43, label="No undervoting irregularities", col="darkgrey", cex=6) + 
+      annotate(geom="text", x=215, y=25, label="Undervoting, 10% of eligible voters", col="darkgrey", cex=6) + 
       geom_rug() + 
       # theme_pubr() +
-      theme_minimal() +
+      theme_minimal(base_size=20) +
       theme(legend.position = "none")
+    
+    
+     
       
     
     # national parliament vs. provincial parliament
@@ -913,8 +1078,25 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
       geom_abline(intercept = 0, slope = 1, lwd=1.5, lty = 2, col = "darkgrey") + 
       geom_abline(intercept = 35, slope = 1, lwd=1, lty = 2, col = "darkgrey") + 
       geom_abline(intercept = -35, slope = 1, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_curve(
+        aes(x = 100, y = 43, xend = 50, yend = 43),
+        arrow = arrow(length = unit(0.03, "npc")), 
+        col = "darkgrey",
+        angle = 0, 
+        curvature = -0.5
+      ) +
+      geom_curve(
+        aes(x = 100, y = 25, xend = 65, yend = 25),
+        arrow = arrow(length = unit(0.03, "npc")), 
+        col = "darkgrey",
+        angle = 0, 
+        curvature = -0.5
+      ) +
+      annotate(geom="text", x=197, y=43, label="No undervoting irregularities", col="darkgrey", cex=6) + 
+      annotate(geom="text", x=215, y=25, label="Undervoting, 10% of eligible voters", col="darkgrey", cex=6) + 
       geom_rug() + 
-      theme_pubr() +
+      # theme_pubr() +
+      theme_minimal(base_size=20) +
       theme(legend.position = "none")
     
     
@@ -932,10 +1114,26 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
       geom_abline(intercept = 0, slope = 1, lwd=1.5, lty = 2, col = "darkgrey") + 
       geom_abline(intercept = 35, slope = 1, lwd=1, lty = 2, col = "darkgrey") + 
       geom_abline(intercept = -35, slope = 1, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_curve(
+        aes(x = 100, y = 43, xend = 50, yend = 43),
+        arrow = arrow(length = unit(0.03, "npc")), 
+        col = "darkgrey",
+        angle = 0, 
+        curvature = -0.5
+      ) +
+      geom_curve(
+        aes(x = 100, y = 25, xend = 65, yend = 25),
+        arrow = arrow(length = unit(0.03, "npc")), 
+        col = "darkgrey",
+        angle = 0, 
+        curvature = -0.5
+      ) +
+      annotate(geom="text", x=197, y=43, label="No undervoting irregularities", col="darkgrey", cex=6) + 
+      annotate(geom="text", x=215, y=25, label="Undervoting, 10% of eligible voters", col="darkgrey", cex=6) + 
       geom_rug() + 
-      theme_pubr() +
+      # theme_pubr() +
+      theme_minimal(base_size=20) +
       theme(legend.position = "none")
-    
     
     # National referendum vs. provincial parliament
     actas17_plot4 <- actas17[,c("SUFRAGANTES_asam_prov", "SUFRAGANTES_consulta", "PARROQUIA_ESTADO_pres", "under_consulta_prov")]
@@ -951,11 +1149,27 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
       geom_abline(intercept = 0, slope = 1, lwd=1.5, lty = 2, col = "darkgrey") + 
       geom_abline(intercept = 35, slope = 1, lwd=1, lty = 2, col = "darkgrey") + 
       geom_abline(intercept = -35, slope = 1, lwd=1, lty = 2, col = "darkgrey") + 
+      geom_curve(
+        aes(x = 100, y = 43, xend = 50, yend = 43),
+        arrow = arrow(length = unit(0.03, "npc")), 
+        col = "darkgrey",
+        angle = 0, 
+        curvature = -0.5
+      ) +
+      geom_curve(
+        aes(x = 100, y = 25, xend = 65, yend = 25),
+        arrow = arrow(length = unit(0.03, "npc")), 
+        col = "darkgrey",
+        angle = 0, 
+        curvature = -0.5
+      ) +
+      annotate(geom="text", x=197, y=43, label="No undervoting irregularities", col="darkgrey", cex=6) + 
+      annotate(geom="text", x=215, y=25, label="Undervoting, 10% of eligible voters", col="darkgrey", cex=6) + 
       geom_rug() + 
-      theme_pubr() +
+      # theme_pubr() +
+      theme_minimal(base_size=20) +
       theme(legend.position = "none")
     
-    grid.arrange(plot1, plot2, plot3, plot4)
   
     
     # heat maps? visualizing bivariate distributions with ellipses?
@@ -981,27 +1195,19 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
       geom_vline(xintercept = 0, lwd=1.5, lty = 2, col = "darkgrey") + 
       geom_vline(xintercept = 35, lwd=1, lty = 2, col = "darkgrey") + 
       geom_vline(xintercept = -35, lwd=1, lty = 2, col = "darkgrey") + 
-      geom_curve(
-        aes(x = 50, y = 95, xend = 2, yend = 95),
-        arrow = arrow(length = unit(0.03, "npc")), 
-        col = "darkgrey",
-        angle = 0, 
-        curvature = -0.5
-      ) +
-      geom_curve(
-        aes(x = 50, y = 75, xend = 37, yend = 75),
-        arrow = arrow(length = unit(0.03, "npc")), 
-        col = "darkgrey",
-        angle = 0, 
-        curvature = -0.5
-      ) +
-      annotate(geom="text", x=105, y=95, label="No undervoting irregularities", col="darkgrey") + 
-      annotate(geom="text", x=75, y=75, label="Undervoting,", col="darkgrey") + 
-      annotate(geom="text", x=91, y=60, label="10% of eligible voters", col="darkgrey") + 
+      #geom_curve(
+      #  aes(x = 65, y = 150, xend = 2, yend = 150),
+      #  arrow = arrow(length = unit(0.03, "npc")), 
+      #  col = "darkgrey",
+      #  angle = 0, 
+      #  curvature = -0.5
+      #) +
+      #annotate(geom="text", x=110, y=150, label="No undervoting irregularities", col="darkgrey", cex=6) + 
+      #annotate(geom="text", x=62, y=50, label= "10% of eligible voters", col="darkgrey", cex=6) + 
       geom_rug() +
       #theme_pubr() +
-      theme_minimal() +
-      theme(legend.position = "none")
+      guides(color = "none") +
+      theme_minimal(base_size=20)
     
     
     # national parliament vs. provincial parliament
@@ -1018,27 +1224,27 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
       geom_vline(xintercept = 0, lwd=1.5, lty = 2, col = "darkgrey") + 
       geom_vline(xintercept = 35, lwd=1, lty = 2, col = "darkgrey") + 
       geom_vline(xintercept = -35, lwd=1, lty = 2, col = "darkgrey") + 
-      geom_curve(
-        aes(x = 50, y = 95, xend = 2, yend = 95),
-        arrow = arrow(length = unit(0.03, "npc")), 
-        col = "darkgrey",
-        angle = 0, 
-        curvature = -0.5
-      ) +
-      geom_curve(
-        aes(x = 50, y = 75, xend = 37, yend = 75),
-        arrow = arrow(length = unit(0.03, "npc")), 
-        col = "darkgrey",
-        angle = 0, 
-        curvature = -0.5
-      ) +
-      annotate(geom="text", x=105, y=95, label="No undervoting irregularities", col="darkgrey") + 
-      annotate(geom="text", x=75, y=75, label="Undervoting,", col="darkgrey") + 
-      annotate(geom="text", x=91, y=60, label="10% of eligible voters", col="darkgrey") + 
+      # geom_curve(
+      #   aes(x = 50, y = 95, xend = 2, yend = 95),
+      #   arrow = arrow(length = unit(0.03, "npc")), 
+      #   col = "darkgrey",
+      #   angle = 0, 
+      #   curvature = -0.5
+      # ) +
+      # geom_curve(
+      #   aes(x = 50, y = 75, xend = 37, yend = 75),
+      #   arrow = arrow(length = unit(0.03, "npc")), 
+      #   col = "darkgrey",
+      #   angle = 0, 
+      #   curvature = -0.5
+      # ) +
+      # annotate(geom="text", x=105, y=95, label="No undervoting irregularities", col="darkgrey") + 
+      # annotate(geom="text", x=75, y=75, label="Undervoting,", col="darkgrey") + 
+      # annotate(geom="text", x=91, y=60, label="10% of eligible voters", col="darkgrey") + 
       geom_rug() +
       #theme_pubr() +
-      theme_minimal() +
-      theme(legend.position = "none")
+      guides(color = "none") +
+      theme_minimal(base_size=20)
     
    
     # Andean parliament vs. provincial parliament
@@ -1055,27 +1261,10 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
       geom_vline(xintercept = 0, lwd=1.5, lty = 2, col = "darkgrey") + 
       geom_vline(xintercept = 35, lwd=1, lty = 2, col = "darkgrey") + 
       geom_vline(xintercept = -35, lwd=1, lty = 2, col = "darkgrey") + 
-      geom_curve(
-        aes(x = 50, y = 95, xend = 2, yend = 95),
-        arrow = arrow(length = unit(0.03, "npc")), 
-        col = "darkgrey",
-        angle = 0, 
-        curvature = -0.5
-      ) +
-      geom_curve(
-        aes(x = 50, y = 75, xend = 37, yend = 75),
-        arrow = arrow(length = unit(0.03, "npc")), 
-        col = "darkgrey",
-        angle = 0, 
-        curvature = -0.5
-      ) +
-      annotate(geom="text", x=105, y=95, label="No undervoting irregularities", col="darkgrey") + 
-      annotate(geom="text", x=75, y=75, label="Undervoting,", col="darkgrey") + 
-      annotate(geom="text", x=91, y=60, label="10% of eligible voters", col="darkgrey") + 
       geom_rug() +
       #theme_pubr() +
-      theme_minimal() +
-      theme(legend.position = "none") 
+      guides(color = "none") +
+      theme_minimal(base_size=20)
    
     
     # National referendum vs. provincial parliament
@@ -1092,28 +1281,15 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
       geom_vline(xintercept = 0, lwd=1.5, lty = 2, col = "darkgrey") + 
       geom_vline(xintercept = 35, lwd=1, lty = 2, col = "darkgrey") + 
       geom_vline(xintercept = -35, lwd=1, lty = 2, col = "darkgrey") + 
-      geom_curve(
-        aes(x = 50, y = 95, xend = 2, yend = 95),
-        arrow = arrow(length = unit(0.03, "npc")), 
-        col = "darkgrey",
-        angle = 0, 
-        curvature = -0.5
-      ) +
-      geom_curve(
-        aes(x = 50, y = 75, xend = 37, yend = 75),
-        arrow = arrow(length = unit(0.03, "npc")), 
-        col = "darkgrey",
-        angle = 0, 
-        curvature = -0.5
-      ) +
-      annotate(geom="text", x=105, y=95, label="No undervoting irregularities", col="darkgrey") + 
-      annotate(geom="text", x=75, y=75, label="Undervoting,", col="darkgrey") + 
-      annotate(geom="text", x=91, y=60, label="10% of eligible voters", col="darkgrey") + 
       geom_rug() +
       #theme_pubr() +
-      theme_minimal() +
-      theme(legend.position = "none") 
+      guides(color = "none") +
+      theme_minimal(base_size=20)
     
+    
+    grid.arrange(plot5, plot6, plot7, plot8)
+    
+    grid.arrange(plot1, plot5, ncol = 2)
     
     #' ---------------------------------
     # 7.3 descriptive statistics -------
@@ -1122,12 +1298,26 @@ actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete pollin
     library(stargazer)
     actas17_histosURBAN <- actas17_histos[actas17_histos$PARROQUIA_ESTADO_pres == "URBANA",]
     actas17_histosRURAL <- actas17_histos[actas17_histos$PARROQUIA_ESTADO_pres == "RURAL",]
-    stargazer(actas17_histosURBAN, type="text")    
-    stargazer(actas17_histosRURAL, type="text") # given range (min/max), differences are negligible
+    stargazer(actas17_histosURBAN, type="latex")    
+    stargazer(actas17_histosRURAL, type="latex") # given range (min/max), differences are negligible
     
+    #' ------------------
+    # 7.4 t-tests -------
+    #' ------------------
+    
+    pres13A = pres13A[-which(pres13A$TERRITORIO_NOMBRE == "EXTERIOR"),]
+    pres13A <- pres13A[-which(pres13A$PROVINCIA_NOMBRE=="GALÁPAGOS"),]
+    t.test(actas17$under_pres_asam_prov[actas17$PARROQUIA_ESTADO_pres=="URBANA"], 
+           actas17$under_pres_asam_prov[actas17$PARROQUIA_ESTADO_pres=="RURAL"])
+    t.test(actas17$under_nac_prov[actas17$PARROQUIA_ESTADO_pres=="URBANA"], 
+           actas17$under_nac_prov[actas17$PARROQUIA_ESTADO_pres=="RURAL"])
+    t.test(actas17$under_andino_prov[actas17$PARROQUIA_ESTADO_pres=="URBANA"], 
+           actas17$under_andino_prov[actas17$PARROQUIA_ESTADO_pres=="RURAL"])
+    t.test(actas17$under_consulta_prov[actas17$PARROQUIA_ESTADO_pres=="URBANA"], 
+           actas17$under_consulta_prov[actas17$PARROQUIA_ESTADO_pres=="RURAL"])
     
     #' -----------------------------
-    # 7.4 size of parroquia -------
+    # 7.5 size of parroquia -------
     #' -----------------------------
     
     # just using number of eligible voters per parroquia

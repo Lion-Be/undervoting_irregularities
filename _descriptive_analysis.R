@@ -7,7 +7,14 @@
 library(scales) # for alpha function in plotting
 library(VGAM) # for dlaplace
 load("U:/PhD Electoral Fraud/Papers/02_Detecting Unbalanced Fraud Approaches From Undervoting Irregularities/undervoting_irregularities/actas17.Rdata")
+actas17 <- actas17[-which(actas17$ELECTORES_REGISTRO_pres<100),] # delete polling stations with <100 eligible voters
+
 load("U:/PhD Electoral Fraud/Papers/02_Detecting Unbalanced Fraud Approaches From Undervoting Irregularities/undervoting_irregularities/actas19.Rdata")
+actas19_alcal_conc_rural <- actas19_alcal_conc_rural[-which(actas19_alcal_conc_rural$ELECTORES_REGISTRO_alcal<100),] # delete polling stations with <100 eligible voters
+actas19_alcal_conc_urban <- actas19_alcal_conc_urban[-which(actas19_alcal_conc_urban$ELECTORES_REGISTRO_alcal<100),] # delete polling stations with <100 eligible voters
+actas19_alcal_pref <- actas19_alcal_pref[-which(actas19_alcal_pref$ELECTORES_REGISTRO_alcal<100),] # delete polling stations with <100 eligible voters
+actas19_alcal_vocales <- actas19_alcal_vocales[-which(actas19_alcal_vocales$ELECTORES_REGISTRO_alcal<100),] # delete polling stations with <100 eligible voters
+
 
 #' ------------------------------
 # 1. data preparation -----------
@@ -165,6 +172,7 @@ load("U:/PhD Electoral Fraud/Papers/02_Detecting Unbalanced Fraud Approaches Fro
     text(9000, 350, labels="Presidential Election", cex=1.2)
     segments(-200, 350, 1000, 350, col="darkgrey", lwd=2)
     text(-3000, 420, labels="2017", cex=1.5, font=2)
+    text(36500, 20, labels="n=39,319", cex=1.2)
     
     par(mar = c(0, 4.5, 0.5, 1))
     plot(actas17$id[actas17$SUFRAGANTES_asam_nac<351], actas17$SUFRAGANTES_asam_nac[actas17$SUFRAGANTES_asam_nac<351], 
@@ -173,6 +181,7 @@ load("U:/PhD Electoral Fraud/Papers/02_Detecting Unbalanced Fraud Approaches Fro
     lines(actas17$id[actas17$SUFRAGANTES_asam_prov<351], actas17$SUFRAGANTES_asam_prov[actas17$SUFRAGANTES_asam_prov<351], col="chartreuse3", lwd=2)
     text(8500, 350, labels="National Parliament", cex=1.2)
     segments(-200, 350, 1000, 350, col="darkgrey", lwd=2)
+    text(36500, 20, labels="n=39,319", cex=1.2)
     
     plot(actas17$id[actas17$SUFRAGANTES_andino<351], actas17$SUFRAGANTES_andino[actas17$SUFRAGANTES_andino<351], 
          type="l", col="darkgrey", 
@@ -180,6 +189,7 @@ load("U:/PhD Electoral Fraud/Papers/02_Detecting Unbalanced Fraud Approaches Fro
     lines(actas17$id[actas17$SUFRAGANTES_asam_prov<351], actas17$SUFRAGANTES_asam_prov[actas17$SUFRAGANTES_asam_prov<351], col="chartreuse3", lwd=2)
     text(8500, 350, labels="Andean Parliament", cex=1.2)
     segments(-200, 350, 1000, 350, col="darkgrey", lwd=2)
+    text(36500, 20, labels="n=39,319", cex=1.2)
     
     par(mar = c(4.5, 4.5, 1, 1)) 
     plot(actas17$id[actas17$SUFRAGANTES_consulta<351], actas17$SUFRAGANTES_consulta[actas17$SUFRAGANTES_consulta<351], 
@@ -190,6 +200,7 @@ load("U:/PhD Electoral Fraud/Papers/02_Detecting Unbalanced Fraud Approaches Fro
     text(9500, 340, labels="Regional Parliaments", cex=1.2)
     segments(-200, 400, 1000, 400, col="darkgrey", lwd=2)
     segments(-200, 340, 1000, 340, col="chartreuse", lwd=2)
+    text(36500, 20, labels="n=39,319", cex=1.2)
     # saved with width=450, height=700
   
     ### 2019 election

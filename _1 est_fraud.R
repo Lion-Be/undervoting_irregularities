@@ -5,7 +5,7 @@ est_fraud <- function(eligible, # vector with eligible voters
                       winner_main = NA, # vector with absolute number of votes for winner in main election
                       winnershare_main = NA, # vector with share of votes for winner in main election
                       uncertainty = c("fundamental", "estimation"), # which types of uncertainty should be incorporated 
-                      n_iter = 50,      # number of iterations underlying mean estimation (estimation uncertainty)
+                      q = 50,      # number of iterations underlying mean estimation (estimation uncertainty)
                       n_iter2 = 100, # number of times mean is estimated (estimation uncertainty)
                       n_postdraws = 500,# number of posterior draws for parameters (fundamental uncertainty)
                       n_burnin = 400,   # burn-in period (fundamental uncertainty)
@@ -22,7 +22,7 @@ est_fraud <- function(eligible, # vector with eligible voters
   
   turnoutshare_baseline <- turnout_baseline / eligible
   turnoutshare_baseline[turnoutshare_baseline > 1] <- 1
-  if (is.na(winnershare_main))
+  if (is.na(winnershare_main)[1])
     winnershare_main <- winner_main / turnout_main
   winnershare_main[winnershare_main < 0] <- 0
   winnershare_main[winnershare_main > 1] <- 1
@@ -68,10 +68,11 @@ est_fraud <- function(eligible, # vector with eligible voters
     
     # rstan setup
     if (!is.element("rstan", (.packages()))) library(rstan)
-    rstan_options(auto_write = TRUE) # to avoid recompilation of unchanged Stan programs
-    options(mc.cores = parallel::detectCores())
-    Sys.setenv(LOCAL_CPP = "-mtune = native")
-  
+    #rstan_options(auto_write = TRUE) # to avoid recompilation of unchanged Stan programs
+    #options(mc.cores = parallel::detectCores())
+    #Sys.setenv(LOCAL_CPP = "-mtune = native")
+    
+    
     # get posterior samples for undervoting_sd in rnorm(undervoting_n, 0, undervoting_sd)
     model_undervoting <- as.character("
     data {
@@ -183,7 +184,7 @@ est_fraud <- function(eligible, # vector with eligible voters
     if (!is.element("fundamental", uncertainty)) {
       # simply iterate over fraud estimation n_iter2 times, always with 
       # same parameter values estimated by MLE
-      n_postdraws <- n_iter2 
+      n_postdraws <- n_iter2
       turnout_alpha <- rep(turnout_alpha, n_postdraws)
       turnout_beta <- rep(turnout_beta, n_postdraws)
       winnershare_alpha <- rep(winnershare_alpha, n_postdraws)
@@ -191,18 +192,23 @@ est_fraud <- function(eligible, # vector with eligible voters
       undervoting_sigma <- rep(undervoting_sigma, n_postdraws)
     }
   
-    euc_estimate_postdraw <- rep(NA, n_postdraws)
-    for (post_draw in 1:n_postdraws) {
+    # define number of iterations of Steps 3-5
+    iterations <- ifelse(is.element("fundamental", uncertainty),
+                         n_postdraws - n_burnin, 
+                         n_iter2)
+    
+    euc_estimate_postdraw <- rep(NA, iterations)
+    for (post_draw in 1:iterations) {
       
       # simulate data under different share_fraud parameters
       euc_dist <- rep(NA, length(seq(0, 0.99,0.02)))
       id_share <- 0    
       
       for (share in seq(0, 0.99,0.02)) {
-        euc_dist_iter <- rep(NA, n_iter)
+        euc_dist_iter <- rep(NA, q)
         id_share <- id_share+1
         
-        for (iter in 1:n_iter) {
+        for (iter in 1:q) {
           df <- gen_data(entities = eligible, 
                          turnout_probs = rbeta(length(eligible), turnout_alpha[post_draw], turnout_beta[post_draw]), 
                          winner_probs = rbeta(length(eligible), winnershare_alpha[post_draw], winnershare_beta[post_draw]),  
@@ -231,8 +237,8 @@ est_fraud <- function(eligible, # vector with eligible voters
       # identify fraud parameter that minimizes distance metric
       if (length(seq(0, 0.99, 0.02)[which.min(euc_dist)]) > 0)
         euc_estimate_postdraw[post_draw] <- seq(0, 0.99, 0.02)[which.min(euc_dist)]
-      if (is.element("fundamental", uncertainty)) 
-        print(str_c("Simulations finished for ", post_draw, " out of ", n_postdraws, " posterior samples."))
+      
+      print(str_c("Simulations finished for ", post_draw, " out of ", iterations, " iterations of Steps 3-5."))
       
     } # end for post_draw
     
